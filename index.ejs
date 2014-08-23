@@ -1,0 +1,42 @@
+
+<html>
+<head>
+<title>
+<%= title %>
+</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap  using v3-->
+	<link href="bootstrap/css/bootstrap.min.css" rel="stylesheet" media="screen">
+	<link href="firstpage.css" rel="stylesheet">
+			<script src="/socket.io/socket.io.js"></script> 
+		<script src="/node_modules/socket.io-stream/socket.io-stream.js"></script>
+	<script src="jquery-1.10.2.min.js"></script>
+	<script src="momentjs/min/moment.min.js"></script>
+	<script src="livestamp.min.js"></script>
+	<script src="jquery-ui/jquery-ui.min.js"></script>
+
+
+	<script src="Garlic.js-1.2.3/garlic.js"></script>
+	<script src="parsely.js"></script>
+	<script src="primary.js"></script>
+	
+	
+		<script src="bootstrap/js/bootstrap.min.js"></script>
+		<script>
+		$(document).ready(function () {
+$('#file_input').change(function(e) {
+	e.preventDefault();
+	alert("welcome");
+var socket = io.connect('http://127.0.1.1:1022/user');  
+             var stream = ss.createStream();
+             ss(socket).emit('send-file', stream, file);
+            ss.createBlobReadStream(file).pipe(stream);
+            
+        });
+    });
+    </script>
+    <body>
+   <form method="post" enctype="multipart/form-data">
+ <input type="file" name="thumbnail" id="file_input"> </form>
+    </body>
