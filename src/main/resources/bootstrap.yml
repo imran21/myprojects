@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: eportal-eventstore
+
+---
+spring:
+  profiles:
+      active: local
+  cloud:
+    config:
+      enabled: true
+    bus:
+      enabled: true
+      amqp:
+        enabled: true
