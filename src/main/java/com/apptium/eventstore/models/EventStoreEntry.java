@@ -14,6 +14,17 @@ public class EventStoreEntry {
 	private String url; 
 	
 	private java.sql.Timestamp createdDate;
+	
+	private String eventdata; 
+	
+
+	public String getEventdata() {
+		return eventdata;
+	}
+
+	public void setEventdata(String eventdata) {
+		this.eventdata = eventdata;
+	}
 
 	public String getId() {
 		return id;
