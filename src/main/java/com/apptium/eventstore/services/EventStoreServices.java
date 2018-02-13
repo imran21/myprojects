@@ -74,6 +74,16 @@ public class EventStoreServices {
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing eventId"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
+		 if(!map.containsKey("accountname"))
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AccountName"),
+						headers,HttpStatus.BAD_REQUEST);
+		 
+		 if(!map.containsKey("appname"))
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AppName"),
+						headers,HttpStatus.BAD_REQUEST);
+		 
+		 
+		 
 		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(map)); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),

@@ -14,6 +14,37 @@ public class EventStoreEntry {
 	private String url; 
 	
 	private java.sql.Timestamp createdDate;
+	
+	private String eventdata; 
+	
+	private String accountname; 
+	private String appname; 
+	
+
+	
+	public String getAccountname() {
+		return accountname;
+	}
+
+	public void setAccountname(String accountname) {
+		this.accountname = accountname;
+	}
+
+	public String getAppname() {
+		return appname;
+	}
+
+	public void setAppname(String appname) {
+		this.appname = appname;
+	}
+
+	public String getEventdata() {
+		return eventdata;
+	}
+
+	public void setEventdata(String eventdata) {
+		this.eventdata = eventdata;
+	}
 
 	public String getId() {
 		return id;

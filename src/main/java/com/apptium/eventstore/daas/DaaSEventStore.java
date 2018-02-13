@@ -1,8 +1,6 @@
 package com.apptium.eventstore.daas;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,28 +30,46 @@ public class DaaSEventStore {
 
 
 		
-		@SuppressWarnings("unchecked")
 		public void save(Map<String,Object> pLogMsg) {
 			
 			String URL = String.format("%s%s",EventstoreApplication.prop.getProperty("DAASURL"),TRANSACTIONLOG); 
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 		
 			pLogMsg.put("id", UUID.randomUUID().toString()); 
-			Timestamp createdDate = CommonMethods.getCurrentDate();
+			//Timestamp createdDate = CommonMethods.getCurrentDate();
 			pLogMsg.put("createdDate", System.currentTimeMillis()); 
 			
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
 				LOG.debug(String.format("Event Store %s - %s successfully created", 
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+				writePushNotification(pLogMsg); 
 			}else{
-				LOG.error(String.format("Event Store %s - %s successfully not created",
+				LOG.error(String.format("Event Store %s - %s not created",
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 			}
 				
 			
 		}
 		
+		/**
+		 * POST the event message to the Notification for Push Processing
+		 * @param pLogMsg
+		 */
+		private void writePushNotification(Map<String,Object> pLogMsg) {
+			
+			String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
+			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
+			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
+			
+			if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
+				LOG.debug(String.format("Event Store Push Notification for %s - %s successfully created", 
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+			}else{
+				LOG.error(String.format("Event Store Push Notification %s - %s not created",
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+			}
+		}
 		
 		public List<EventStoreEntry> retreiveFromEventStore(Long start, Long end) {
 			
