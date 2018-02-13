@@ -70,7 +70,20 @@ public class EventStoreSoapService {
 		                "NOT_FOUND", "Event Store Message is missing the url"));
 		 }
 		 
-			 
+		 if(request.getAccountname() != null) {
+			 map.put("accountname", request.getAccountname()); 
+		 }else {
+			 throw new ServiceFaultException("ERROR",new ServiceFault(
+		                "NOT_FOUND", "Event Store Message is missing the AccountName"));
+		 }
+		 
+		 if(request.getAppname() != null) {
+			 map.put("appname", request.getAppname()); 
+		 }else {
+			 throw new ServiceFaultException("ERROR",new ServiceFault(
+		                "NOT_FOUND", "Event Store Message is missing the AppName"));
+		 }
+		 	 
 		 
 		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(map)); 
 		response.setStatus("Successfully");

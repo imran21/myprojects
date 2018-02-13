@@ -17,6 +17,26 @@ public class EventStoreEntry {
 	
 	private String eventdata; 
 	
+	private String accountname; 
+	private String appname; 
+	
+
+	
+	public String getAccountname() {
+		return accountname;
+	}
+
+	public void setAccountname(String accountname) {
+		this.accountname = accountname;
+	}
+
+	public String getAppname() {
+		return appname;
+	}
+
+	public void setAppname(String appname) {
+		this.appname = appname;
+	}
 
 	public String getEventdata() {
 		return eventdata;
