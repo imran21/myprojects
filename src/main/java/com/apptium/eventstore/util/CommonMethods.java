@@ -59,16 +59,16 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonParseException e) {
 			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonMappingException e) {
 			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (IOException e) {
 			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return executed;
 	}
@@ -103,16 +103,16 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonParseException e) {
 			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonMappingException e) {
 			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (IOException e) {
 			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return executed;
 	}
@@ -185,16 +185,16 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonParseException e) {
 			logger.error("JsonParseException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonMappingException e) {
 			logger.error("JsonMappingException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (IOException e) {
 			logger.error("IOException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return myObject;
 	}
@@ -223,16 +223,16 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonParseException e) {
 			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (JsonMappingException e) {
 			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		} catch (IOException e) {
 			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			e.printStackTrace();
+			//e.printStackTrace();
 		}
 		return myObject;
 	}
