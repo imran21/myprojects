@@ -1,8 +1,11 @@
 package com.apptium.eventstore.daas;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -26,8 +29,75 @@ public class DaaSEventStore {
 	
 	final String TRANSACTIONLOG = "eventStores"; 
 	final String BETWEENSEARCH = "eventStores/search/findByTimeStampBetween?start=1513712923340&end=1513717944317";
-
-
+	
+/**
+ * 
+ * @param inputMessage
+ * @param accountName
+ */
+		@SuppressWarnings("unchecked")
+		public void process(String inputMessage,String accountName){
+			String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
+			String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
+			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
+			String DMNSymptomsURL = String.format("%sname/%s/symptoms", DMNURL,dmnKey); 
+			
+			Object dmnTable = CommonMethods.invokePostExecution2(DMNSymptomsURL, inputMessage, null); 
+			if(dmnTable != null) {
+				
+				JsonParser jsonParser = new JsonParser();
+				JsonElement dmnTree = jsonParser.parse(dmnTable.toString()); 
+				JsonObject tableBody = dmnTree.getAsJsonObject();
+				if(tableBody.has("tableBody")) {
+					Gson gson = new Gson(); 
+					HashMap<String,Object> map = new HashMap<String,Object>();
+					
+				
+					Set<Entry<String, JsonElement>> test  = tableBody.getAsJsonObject().entrySet(); 
+						
+						JsonParser jsonParser2 = new JsonParser();
+						JsonElement rows = jsonParser2.parse(test.iterator().next().getValue().toString());
+						JsonObject ruleItems= rows.getAsJsonObject(); 
+						for(Entry<String, JsonElement> myRow : ruleItems.entrySet()) {
+							LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
+							String row = myRow.getValue().toString(); 
+							map = gson.fromJson(row, map.getClass()); 
+							String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
+							Object distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
+							if(distResult != null) {
+								JsonParser djsonParser = new JsonParser();
+								JsonElement jsonTree = djsonParser.parse(distResult.toString()); 
+								JsonObject dResults = jsonTree.getAsJsonObject(); 
+								if(dResults.has("_embedded")) {
+									JsonObject _embedded = dResults.get("_embedded").getAsJsonObject(); 
+									if(_embedded.has("dMNDisseminations")) {
+										JsonArray eventStores = _embedded.get("dMNDisseminations").getAsJsonArray(); 
+										eventStores.forEach((x)->{
+											JsonObject item = x.getAsJsonObject(); 
+											if(item.has("ruleType") && 
+												item.get("ruleType").getAsString().toLowerCase().equals("event")) {
+												//String ruleId = item.get("ruleId").getAsString(); 
+												String eventId = item.get("eventid").getAsString(); 
+												Map<String,Object> pLogMsg = new HashMap<String,Object>(); 
+												
+												pLogMsg.put("eventId", eventId); 
+												pLogMsg.put("timeStamp", System.currentTimeMillis()); 
+												pLogMsg.put("eventdata", inputMessage); 
+												pLogMsg.put("accountname",accountName); 
+												pLogMsg.put("objectId",UUID.randomUUID().toString()); 
+												save(pLogMsg); 
+												
+											}
+										}); 
+									}
+								}
+							}
+						
+					}
+				}
+			}
+			
+		}
 
 		
 		public void save(Map<String,Object> pLogMsg) {
@@ -63,10 +133,10 @@ public class DaaSEventStore {
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			
 			if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-				LOG.debug(String.format("Event Store Push Notification for %s - %s successfully created", 
+				LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 			}else{
-				LOG.error(String.format("Event Store Push Notification %s - %s not created",
+				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 			}
 		}
