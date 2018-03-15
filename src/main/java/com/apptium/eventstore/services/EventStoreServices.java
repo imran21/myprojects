@@ -91,11 +91,51 @@ public class EventStoreServices {
 	}
 	
 	
+	@RequestMapping(method=RequestMethod.POST,value="/{accountName}" )
+	public ResponseEntity<?> createEvent(@RequestBody String eventMessage,@PathVariable("accountName")String accountName) {
+		HttpHeaders headers = new HttpHeaders(); 		 
+		 if(accountName == null || accountName.isEmpty())
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","AccountName is required "),
+						headers,HttpStatus.BAD_REQUEST);
+		 
+		 if(eventMessage == null ||eventMessage.isEmpty())
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","EventMessage is required"),
+						headers,HttpStatus.BAD_REQUEST);
+		 
+		 
+		 
+		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage, accountName)); 
+	
+		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
+				headers,HttpStatus.CREATED);
+	}
+	
+	
+	
 	private Future<String> writeEventStoreEntry(Map<String,Object> eventMessage){
 		CompletableFuture<String> output = new CompletableFuture<>();
 		try {
+			 
 			  DaaSEventStore daasObject = new DaaSEventStore(); 
 			  daasObject.save(eventMessage);
+			  output.complete("success");
+		}catch (Exception e) {
+			  output.completeExceptionally(e);
+		}
+			
+		return output; 
+	}
+	
+	
+	
+	
+	
+	private Future<String> writeEventStoreEntry(String inputMessage,String accountName){
+		CompletableFuture<String> output = new CompletableFuture<>();
+		try {
+			
+			  DaaSEventStore daasObject = new DaaSEventStore(); 
+			  daasObject.process(inputMessage,accountName);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);

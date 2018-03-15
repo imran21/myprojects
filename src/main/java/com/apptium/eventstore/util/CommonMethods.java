@@ -269,4 +269,41 @@ public class CommonMethods {
 		formatter.setCalendar(calendar);
 		return formatter.getCalendar().getTime(); 	
 	}
+	
+	
+	/**
+	 * Returns the response body with any object mapping
+	 * @param executionURL
+	 * @param executionRequestBody
+	 * @param restTemplate
+	 * @return
+	 */
+	public static  Object invokePostExecution2(String executionURL,String executionRequestBody,RestTemplate restTemplate){
+		Map<String, String> map = new HashMap<String, String>();
+		HttpHeaders headers = new HttpHeaders(); 
+		headers.setContentType(MediaType.APPLICATION_JSON);
+
+		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
+		Object myObject = null;
+		try{
+			//ResponseEntity<String> responseString = restTemplate.exchange("http://ENGINE-SERVICE/engine/ebpmn/services/SIKOMSWrkFlow/startinstance/1", HttpMethod.POST,entity, String.class, map); 
+			if(restTemplate == null){
+				restTemplate = new RestTemplate(); 
+			}
+			ResponseEntity<String> responseString = restTemplate.exchange(executionURL, HttpMethod.POST,entity, String.class, map); 
+			if(responseString != null){
+				if(responseString.getStatusCode() == HttpStatus.OK){
+					myObject = responseString.getBody(); 
+					logger.debug(responseString.getBody());
+				}else if(responseString.getStatusCode() == HttpStatus.CREATED){
+					myObject = responseString.getBody(); 
+					logger.debug(responseString.getBody());
+				}
+			}
+		}catch(RestClientException e){
+			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			//e.printStackTrace();
+		} 
+		return myObject;
+	}
 }
