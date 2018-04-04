@@ -67,6 +67,12 @@
 			<artifactId>gson</artifactId>
 		</dependency>
 		
+		<dependency>
+  <groupId>com.typesafe.akka</groupId>
+  <artifactId>akka-stream-kafka_2.11</artifactId>
+  <version>0.19</version>
+</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
 <dependency>
     <groupId>javax.xml.bind</groupId>

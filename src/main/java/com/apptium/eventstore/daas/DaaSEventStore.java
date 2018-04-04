@@ -42,6 +42,7 @@ public class DaaSEventStore {
 			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
 			String DMNSymptomsURL = String.format("%sname/%s/symptoms", DMNURL,dmnKey); 
 			
+	try {		
 			Object dmnTable = CommonMethods.invokePostExecution2(DMNSymptomsURL, inputMessage, null); 
 			if(dmnTable != null) {
 				
@@ -97,6 +98,17 @@ public class DaaSEventStore {
 				}
 			}
 			
+			
+		 }catch(Exception ex) {
+				JsonParser jsonParser = new JsonParser();
+				JsonElement message = jsonParser.parse(inputMessage); 
+				message.getAsJsonObject().addProperty("accountName", accountName);
+				message.getAsJsonObject().addProperty("action", "process"); 
+				String eventMessage = message.getAsJsonObject().toString(); 
+				CommonMethods.sendToEventQueue(eventMessage);
+				
+		 }
+			
 		}
 
 		
@@ -106,19 +118,27 @@ public class DaaSEventStore {
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 		
 			pLogMsg.put("id", UUID.randomUUID().toString()); 
-			//Timestamp createdDate = CommonMethods.getCurrentDate();
 			pLogMsg.put("createdDate", System.currentTimeMillis()); 
 			
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
-			if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-				LOG.debug(String.format("Event Store %s - %s successfully created", 
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-				writePushNotification(pLogMsg); 
-			}else{
-				LOG.error(String.format("Event Store %s - %s not created",
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-			}
+			try {
+				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
+					LOG.debug(String.format("Event Store %s - %s successfully created", 
+							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+					writePushNotification(pLogMsg); 
+				}else{
+					LOG.error(String.format("Event Store %s - %s not created",
+							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+				}
+			}catch(Exception ex) {
+				LOG.error(String.format("Event Store %s - %s not created, exception %s",
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
 				
+				pLogMsg.put("action", "save"); 
+				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
+				CommonMethods.sendToEventQueue(inputMessage);
+
+			}
 			
 		}
 		
@@ -126,18 +146,26 @@ public class DaaSEventStore {
 		 * POST the event message to the Notification for Push Processing
 		 * @param pLogMsg
 		 */
-		private void writePushNotification(Map<String,Object> pLogMsg) {
+		public void writePushNotification(Map<String,Object> pLogMsg) {
 			
 			String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
-			
-			if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-				LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-			}else{
-				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+			try {
+				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
+					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
+							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+				}else{
+					LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
+							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+				}
+			}catch(Exception ex) {
+				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created, Exception %s",
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
+				
+				pLogMsg.put("action", "write"); 
+				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
+				CommonMethods.sendToEventQueue(inputMessage);
 			}
 		}
 		
@@ -145,8 +173,15 @@ public class DaaSEventStore {
 			
 			String URL = String.format("%s%s?start=%s&end=%s",EventstoreApplication.prop.getProperty("DAASURL"),BETWEENSEARCH,start,end); 
 			
-			Object result = CommonMethods.invokeGetExecution(URL,"{}", new RestTemplate()); 
 			List<EventStoreEntry> events = new ArrayList<EventStoreEntry>(); 
+			Object result = null; 
+			try {
+				result = CommonMethods.invokeGetExecution(URL,"{}", new RestTemplate());
+			}catch(Exception ex) {
+				LOG.error(ex.getLocalizedMessage());
+				return events;
+			}
+			
 			if(result == null) return events;  
 			
 		    JsonParser parser = new JsonParser(); 
