@@ -16,7 +16,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -31,8 +30,6 @@ import com.apptium.eventstore.EventstoreApplication;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 
 public class CommonMethods {
 	//static final Logger logger = LogManager.getLogger(CommonMethods.class);
@@ -69,7 +66,7 @@ public class CommonMethods {
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
 			if(e.getMessage().contains("404")){
-				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
 				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 			}else {
@@ -160,9 +157,11 @@ public class CommonMethods {
 				logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
 			}
 			if(e.getMessage().contains("404")){
-				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
 				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+			}else {
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500"));
 			}
 			
 		} catch (Exception e) {
@@ -325,7 +324,7 @@ public class CommonMethods {
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
 			if(e.getMessage().contains("404")){
-				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
 				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 			}else {
