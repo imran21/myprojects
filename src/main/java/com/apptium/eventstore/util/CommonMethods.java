@@ -9,8 +9,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -21,16 +27,19 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.apptium.eventstore.EventstoreApplication;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 
 public class CommonMethods {
 	//static final Logger logger = LogManager.getLogger(CommonMethods.class);
 	
 	static final Logger logger = LoggerFactory.getLogger(CommonMethods.class);
 	
-	public static  Boolean invokeExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate){
+	public static  Boolean invokeExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate) throws Exception{
 		Boolean executed = false;
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
@@ -59,16 +68,23 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			//e.printStackTrace();
+			if(e.getMessage().contains("404")){
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+			}else if(e.getMessage().contains("500")) {
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+			}else {
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+			}
+				
 		} catch (JsonParseException e) {
 			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			//e.printStackTrace();
+			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		} catch (JsonMappingException e) {
 			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			//e.printStackTrace();
+			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		} catch (IOException e) {
 			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
-			//e.printStackTrace();
+			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		}
 		return executed;
 	}
@@ -119,7 +135,7 @@ public class CommonMethods {
 	
 	
 	
-	public static Object invokeGetExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate){
+	public static Object invokeGetExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate) throws Exception{
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -142,6 +158,11 @@ public class CommonMethods {
 				logger.info(String.format("Resource at %s does not exist",executionURL));
 			}else{
 				logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+			}
+			if(e.getMessage().contains("404")){
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+			}else if(e.getMessage().contains("500")) {
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 			}
 			
 		} catch (Exception e) {
@@ -277,8 +298,9 @@ public class CommonMethods {
 	 * @param executionRequestBody
 	 * @param restTemplate
 	 * @return
+	 * @throws Exception 
 	 */
-	public static  Object invokePostExecution2(String executionURL,String executionRequestBody,RestTemplate restTemplate){
+	public static  Object invokePostExecution2(String executionURL,String executionRequestBody,RestTemplate restTemplate) throws Exception{
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -302,8 +324,46 @@ public class CommonMethods {
 			}
 		}catch(RestClientException e){
 			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
-			//e.printStackTrace();
+			if(e.getMessage().contains("404")){
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+			}else if(e.getMessage().contains("500")) {
+				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+			}else {
+				throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage())); 
+			}
 		} 
 		return myObject;
+	}
+	
+	
+	public static void sendToEventQueue(String inputMessage) {
+		Map<String, Object> props = new HashMap<>();
+		
+		if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+			logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
+			return; 
+		}
+		
+		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+		}else {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+		}
+		props.put(ProducerConfig.RETRIES_CONFIG, 0);
+		props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+		props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		
+	
+		try {
+			Producer<String, String> producer = new KafkaProducer<>(props);
+			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PLATFORM_KAFKA_TOPIC,inputMessage));
+	        producer.close();
+		} catch (Exception e) {
+			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+		}
+		
 	}
 }
