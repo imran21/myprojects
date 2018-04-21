@@ -118,6 +118,7 @@ public class EventStoreServices {
 			 
 			  DaaSEventStore daasObject = new DaaSEventStore(); 
 			  daasObject.save(eventMessage);
+			  daasObject.writePushNotification(eventMessage);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);

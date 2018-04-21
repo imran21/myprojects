@@ -2,6 +2,7 @@ package com.apptium.eventstore.daas;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -52,7 +53,7 @@ public class DaaSEventStore {
 				if(tableBody.has("tableBody")) {
 					Gson gson = new Gson(); 
 					HashMap<String,Object> map = new HashMap<String,Object>();
-					
+					Map<String,Object> pPushMsg = null; 
 				
 					Set<Entry<String, JsonElement>> test  = tableBody.getAsJsonObject().entrySet(); 
 						
@@ -73,7 +74,9 @@ public class DaaSEventStore {
 									JsonObject _embedded = dResults.get("_embedded").getAsJsonObject(); 
 									if(_embedded.has("dMNDisseminations")) {
 										JsonArray eventStores = _embedded.get("dMNDisseminations").getAsJsonArray(); 
-										eventStores.forEach((x)->{
+										Iterator<JsonElement> rw = eventStores.iterator(); 
+										while(rw.hasNext()) {
+											JsonElement x = rw.next(); 
 											JsonObject item = x.getAsJsonObject(); 
 											if(item.has("ruleType") && 
 												item.get("ruleType").getAsString().toLowerCase().equals("event")) {
@@ -87,14 +90,18 @@ public class DaaSEventStore {
 												pLogMsg.put("accountname",accountName); 
 												pLogMsg.put("objectId",UUID.randomUUID().toString()); 
 												save(pLogMsg); 
-												
+												if(pPushMsg == null) pPushMsg = pLogMsg; 
+				
 											}
-										}); 
+										}
+										
 									}
 								}
 							}
 						
 					}
+				if(pPushMsg != null && !pPushMsg.isEmpty())
+					writePushNotification(pPushMsg); 
 				}
 			}
 			
@@ -125,7 +132,7 @@ public class DaaSEventStore {
 				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
 					LOG.debug(String.format("Event Store %s - %s successfully created", 
 							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-					writePushNotification(pLogMsg); 
+					//writePushNotification(pLogMsg); 
 				}else{
 					LOG.error(String.format("Event Store %s - %s not created",
 							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
