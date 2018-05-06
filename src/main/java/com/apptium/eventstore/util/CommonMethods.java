@@ -40,7 +40,7 @@ public class CommonMethods {
 		Boolean executed = false;
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject;
@@ -91,7 +91,7 @@ public class CommonMethods {
 		Boolean executed = false;
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject;
@@ -135,7 +135,7 @@ public class CommonMethods {
 	public static Object invokeGetExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate) throws Exception{
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject = null; 
@@ -173,7 +173,7 @@ public class CommonMethods {
 	public static Object invokePatchExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate){
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject = null; 
@@ -222,7 +222,7 @@ public class CommonMethods {
 	public static  Object invokePostExecution(String executionURL,String executionRequestBody,RestTemplate restTemplate){
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject = null;
@@ -302,7 +302,7 @@ public class CommonMethods {
 	public static  Object invokePostExecution2(String executionURL,String executionRequestBody,RestTemplate restTemplate) throws Exception{
 		Map<String, String> map = new HashMap<String, String>();
 		HttpHeaders headers = new HttpHeaders(); 
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
 
 		HttpEntity<String> entity = new HttpEntity<String>(executionRequestBody, headers);
 		Object myObject = null;
