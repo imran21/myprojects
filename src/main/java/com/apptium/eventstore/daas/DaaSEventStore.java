@@ -1,5 +1,7 @@
 package com.apptium.eventstore.daas;
 
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,6 +44,7 @@ public class DaaSEventStore {
 			String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
 			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
 			String DMNSymptomsURL = String.format("%sname/%s/symptoms", DMNURL,dmnKey); 
+			Timestamp currentUTC = CommonMethods.getCurrentDate();
 			
 	try {		
 			Object dmnTable = CommonMethods.invokePostExecution2(DMNSymptomsURL, inputMessage, null); 
@@ -85,7 +88,7 @@ public class DaaSEventStore {
 												Map<String,Object> pLogMsg = new HashMap<String,Object>(); 
 												
 												pLogMsg.put("eventId", eventId); 
-												pLogMsg.put("timeStamp", System.currentTimeMillis()); 
+												pLogMsg.put("timeStamp", currentUTC.getTime()); 
 												pLogMsg.put("eventdata", inputMessage); 
 												pLogMsg.put("accountname",accountName); 
 												pLogMsg.put("objectId",UUID.randomUUID().toString()); 
