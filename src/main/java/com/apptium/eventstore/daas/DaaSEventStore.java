@@ -39,7 +39,7 @@ public class DaaSEventStore {
  * @param accountName
  */
 		@SuppressWarnings("unchecked")
-		public void process(String inputMessage,String accountName){
+		public void process(String inputMessage,String accountName,String appName){
 			String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
 			String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
 			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
@@ -91,6 +91,7 @@ public class DaaSEventStore {
 												pLogMsg.put("timeStamp", currentUTC.getTime()); 
 												pLogMsg.put("eventdata", inputMessage); 
 												pLogMsg.put("accountname",accountName); 
+												pLogMsg.put("appname", appName); 
 												pLogMsg.put("objectId",UUID.randomUUID().toString()); 
 												save(pLogMsg); 
 												if(pPushMsg == null) pPushMsg = pLogMsg; 
@@ -113,6 +114,7 @@ public class DaaSEventStore {
 				JsonParser jsonParser = new JsonParser();
 				JsonElement message = jsonParser.parse(inputMessage); 
 				message.getAsJsonObject().addProperty("accountName", accountName);
+				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
 				String eventMessage = message.getAsJsonObject().toString(); 
 				CommonMethods.sendToEventQueue(eventMessage);

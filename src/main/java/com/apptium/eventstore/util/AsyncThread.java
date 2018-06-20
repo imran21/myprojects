@@ -121,7 +121,8 @@ public class AsyncThread implements Runnable {
 	   		            	 							JsonObject message = dmnTree.getAsJsonObject();
 	   		            	 							if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("process")) {
 	   		            	 								String accountName = message.get("accountName").getAsString(); 
-	   		            	 								daasObject.process(message.toString(), accountName);
+	   		            	 								String appName = message.get("appname").getAsString(); 
+	   		            	 								daasObject.process(message.toString(), accountName,appName);
 	   		            	 							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
 	   		            	 								
 	   		            	 								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 

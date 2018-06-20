@@ -102,9 +102,18 @@ public class EventStoreServices {
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","EventMessage is required"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
+		 Gson gson = new Gson();
+		 Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+		 Map<String,Object> map = gson.fromJson(eventMessage, type);
+		
 		 
-		 
-		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage, accountName)); 
+		 if(!map.containsKey("appname")) {
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AppName"),
+						headers,HttpStatus.BAD_REQUEST);
+		 }
+			 
+		 final String appName =  map.get("appname").toString();  
+		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage, accountName,appName)); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
 				headers,HttpStatus.CREATED);
@@ -131,12 +140,12 @@ public class EventStoreServices {
 	
 	
 	
-	private Future<String> writeEventStoreEntry(String inputMessage,String accountName){
+	private Future<String> writeEventStoreEntry(String inputMessage,String accountName,String appName){
 		CompletableFuture<String> output = new CompletableFuture<>();
 		try {
 			
 			  DaaSEventStore daasObject = new DaaSEventStore(); 
-			  daasObject.process(inputMessage,accountName);
+			  daasObject.process(inputMessage,accountName,appName);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);
