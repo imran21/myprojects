@@ -67,11 +67,6 @@
 			<artifactId>gson</artifactId>
 		</dependency>
 		
-		<dependency>
-  <groupId>com.typesafe.akka</groupId>
-  <artifactId>akka-stream-kafka_2.11</artifactId>
-  <version>0.19</version>
-</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
 <dependency>
@@ -79,7 +74,42 @@
     <artifactId>jaxb-api</artifactId>
     <version>2.1</version>
 </dependency>
-		
+
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>23.6-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-actor_2.12</artifactId>
+			<version>2.5.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-testkit_2.12</artifactId>
+			<version>2.5.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.lightbend.akka</groupId>
+			<artifactId>akka-stream-alpakka-slick_2.12</artifactId>
+			<version>0.12</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-stream_2.12</artifactId>
+			<version>2.5.9</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-stream-kafka_2.12</artifactId>
+			<version>0.19</version>
+		</dependency>
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-slf4j_2.12</artifactId>
+			<version>2.5.9</version>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

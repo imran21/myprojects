@@ -1,6 +1,5 @@
 package com.apptium.eventstore.daas;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -64,12 +63,19 @@ public class DaaSEventStore {
 						JsonElement rows = jsonParser2.parse(test.iterator().next().getValue().toString());
 						JsonObject ruleItems= rows.getAsJsonObject(); 
 						for(Entry<String, JsonElement> myRow : ruleItems.entrySet()) {
-							LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
+							//LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
 							String row = myRow.getValue().toString(); 
 							map = gson.fromJson(row, map.getClass()); 
-							String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
-							Object distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
+							Object distResult = null; 
+							if(EventstoreApplication.dissimeninationRecords.asMap().containsKey(myRow.getKey())) {
+								//LOG.debug(String.format(" >>>> from cache %s size %d", myRow.getKey(),EventstoreApplication.dissimeninationRecords.asMap().size()));
+								distResult = EventstoreApplication.dissimeninationRecords.asMap().get(myRow.getKey()); 
+							}else {
+								String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
+								 distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
+							}
 							if(distResult != null) {
+								EventstoreApplication.dissimeninationRecords.asMap().put(myRow.getKey(), distResult.toString()); 
 								JsonParser djsonParser = new JsonParser();
 								JsonElement jsonTree = djsonParser.parse(distResult.toString()); 
 								JsonObject dResults = jsonTree.getAsJsonObject(); 
@@ -111,6 +117,7 @@ public class DaaSEventStore {
 			
 			
 		 }catch(Exception ex) {
+			    ex.printStackTrace();
 				JsonParser jsonParser = new JsonParser();
 				JsonElement message = jsonParser.parse(inputMessage); 
 				message.getAsJsonObject().addProperty("accountName", accountName);
@@ -135,8 +142,8 @@ public class DaaSEventStore {
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
 				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-					LOG.debug(String.format("Event Store %s - %s successfully created", 
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//					LOG.debug(String.format("Event Store %s - %s successfully created", 
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 					//writePushNotification(pLogMsg); 
 				}else{
 					LOG.error(String.format("Event Store %s - %s not created",
@@ -164,13 +171,15 @@ public class DaaSEventStore {
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
-				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-				}else{
-					LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-				}
+				CommonMethods.sendToPushQueue(tlog);
+				
+//				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
+//					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//				}else{
+//					LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//				}
 			}catch(Exception ex) {
 				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created, Exception %s",
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));

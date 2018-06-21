@@ -53,13 +53,13 @@ public class CommonMethods {
 			if(responseString != null){
 				if(responseString.getStatusCode() == HttpStatus.OK){
 					myObject = new ObjectMapper().readValue(responseString.getBody(),Object.class);
-					logger.debug(myObject.toString());
+					//logger.debug(myObject.toString());
 					
 					executed = true;
 				}else if(responseString.getStatusCode() == HttpStatus.CREATED){
 					
 					myObject = new ObjectMapper().readValue(responseString.getBody(),Object.class);
-					logger.debug(myObject.toString());
+					//logger.debug(myObject.toString());
 					executed = true; 
 				}
 			}
@@ -315,10 +315,10 @@ public class CommonMethods {
 			if(responseString != null){
 				if(responseString.getStatusCode() == HttpStatus.OK){
 					myObject = responseString.getBody(); 
-					logger.debug(responseString.getBody());
+					//logger.debug(responseString.getBody());
 				}else if(responseString.getStatusCode() == HttpStatus.CREATED){
 					myObject = responseString.getBody(); 
-					logger.debug(responseString.getBody());
+					//logger.debug(responseString.getBody());
 				}
 			}
 		}catch(RestClientException e){
@@ -359,6 +359,38 @@ public class CommonMethods {
 		try {
 			Producer<String, String> producer = new KafkaProducer<>(props);
 			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PLATFORM_KAFKA_TOPIC,inputMessage));
+	        producer.close();
+		} catch (Exception e) {
+			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+		}
+		
+	}
+	
+	
+	public static void sendToPushQueue(String inputMessage) {
+		Map<String, Object> props = new HashMap<>();
+		
+		if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+			logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
+			return; 
+		}
+		
+		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+		}else {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+		}
+		props.put(ProducerConfig.RETRIES_CONFIG, 0);
+		props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+		props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		
+	
+		try {
+			Producer<String, String> producer = new KafkaProducer<>(props);
+			producer.send(new ProducerRecord<String, String>("PushQueue",inputMessage));
 	        producer.close();
 		} catch (Exception e) {
 			logger.error("Exception on sendToProcessQueue "+e.getMessage());

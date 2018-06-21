@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -47,8 +48,38 @@ public class AsyncThread implements Runnable {
 //			} catch (InterruptedException e1) {
 //				
 //			}
-		   invokeFalloutOperations3(); 
-		   
+		   //invokeFalloutOperations3(); 
+		   enqueue(); 
+		
+			
+			
+	   }
+	   
+	   private void enqueue() {
+		   while(true) {
+			   try {
+			   Stream<String> s =  EventstoreApplication.set.stream(); 
+			   log.debug(String.format("%d total pending", EventstoreApplication.set.size()));
+			 
+			   s.limit(100)
+			   .map(x->{
+				   CommonMethods.sendToEventQueue(x);
+				   return x; 
+			   })
+			   .forEach(x->{
+				  	if (x != null) {
+				  		EventstoreApplication.set.remove(x); 
+				  	}
+			  });
+			   log.debug(String.format("%d total remaining", EventstoreApplication.set.size()));
+			 
+				Thread.sleep(6000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				log.error("Transaction Consumer :"+e.getLocalizedMessage());
+				break; 
+			}
+		   }
 	   }
 	   
 		private void invokeFalloutOperations3() {
@@ -73,6 +104,7 @@ public class AsyncThread implements Runnable {
 			props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 			props.put(ConsumerConfig.GROUP_ID_CONFIG, PLATFORM_KAFKA_GROUP);
 			props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+	
 			
 			Boolean supportingMSRunning = false; 
 			
@@ -88,10 +120,10 @@ public class AsyncThread implements Runnable {
 								
 								if(supportingMSRunning) {
 								
-										log.error("THIS NOT AN ERROR  - Before Transaction SUBSCRIBE");
+										//log.error("THIS NOT AN ERROR  - Before Transaction SUBSCRIBE");
 										KafkaConsumer<String, String> orderConsumer = new KafkaConsumer<>(props);
 										orderConsumer.subscribe(topics);
-										log.error("THIS NOT AN ERROR  - After Transaction SUBSCRIBE");
+										//log.error("THIS NOT AN ERROR  - After Transaction SUBSCRIBE");
 										Gson gson = new Gson(); 
 
 										try {
@@ -100,20 +132,20 @@ public class AsyncThread implements Runnable {
 								
 											while(p < PLATFORM_KAFKA_LOOPCOUNT){
 													p++;
-													log.error("THIS NOT AN ERROR  - Before Transaction POLLING");
+													//log.error("THIS NOT AN ERROR  - Before Transaction POLLING");
 													ConsumerRecords<String, String> records = orderConsumer.poll(PLATFORM_KAFKA_POLLTIME);
-													log.error("THIS NOT AN ERROR  - After Transaction POLLING");
-													log.error("THIS NOT AN ERROR  - P : "+p +" records count "+records.count());
+													//log.error("THIS NOT AN ERROR  - After Transaction POLLING");
+													//log.error("THIS NOT AN ERROR  - P : "+p +" records count "+records.count());
 													int totalSize  = 50;//EventstoreApplication.transactionProcesing.asMap().size();
-													int mustBeCompletedBeforePolling = (int)(totalSize*(50.0f/100.0f)); 
+													//int mustBeCompletedBeforePolling = (int)(totalSize*(50.0f/100.0f)); 
 							
-													log.error(String.format("Trying transaction %s percentage to process %s ",50,mustBeCompletedBeforePolling));
+													//log.error(String.format("Trying transaction %s percentage to process %s ",50,mustBeCompletedBeforePolling));
 										
 										//if(supportingMSRunning && EventstoreApplication.transactionProcesing.asMap().size() < fafInitialBatch) {
 												//(AppStarter.transactionProcesing.asMap().isEmpty() || mustBeCompletedBeforePolling <= 20) ){
 											
 											for (ConsumerRecord<String, String> record : records) {
-												log.error(String.format(">>> partition = %s,offset = %d, key = %s, value = %s%n, topic = %s",
+												log.debug(String.format(">>> partition = %s,offset = %d, key = %s, value = %s%n, topic = %s",
 	   		            	 								record.partition(), record.offset(), record.key(), record.value(), record.topic()));
 	   		            	 						if(record.topic().equalsIgnoreCase(EventstoreApplication.PLATFORM_KAFKA_TOPIC)) {
 	   		            	 							JsonParser jsonParser = new JsonParser();
