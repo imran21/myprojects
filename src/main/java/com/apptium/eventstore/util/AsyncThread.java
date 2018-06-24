@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletionStage;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -13,15 +14,17 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.client.RestTemplate;
 
 import com.apptium.eventstore.EventstoreApplication;
+import com.apptium.eventstore.actors.AtLeastOnceWithBatchCommitExample;
 import com.apptium.eventstore.daas.DaaSEventStore;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+
+import akka.Done;
 
 public class AsyncThread implements Runnable {
 
@@ -36,28 +39,77 @@ public class AsyncThread implements Runnable {
 	  }
 
 	   public void run() {
-//		   Map<String, Object> metaData = new HashMap<String,Object>(); 
-//		   MessageIntegrationSPI msgIntegrationSPI=MessageIntegrationSPI.getMessageIntegrationImpl("eportal");
-//		   msgIntegrationSPI.receive(integrationMessage, metaData);
-//		   log.debug("Starting Workflow");
-//		  // metaData = null; 
-//		   try {
-//				Thread.sleep(1000);
-//				metaData = null; 
-//			} catch (InterruptedException e1) {
-//				
-//			}
-		   invokeFalloutOperations3(); 
-		   
+		   //invokeFalloutOperations3(); 
+		   enqueue(); 
+		
+			
+			
 	   }
 	   
-		private void invokeFalloutOperations3() {
+	   private void enqueue() {
+			Boolean restartNeeded = false;
+		   while(true) {
+			   try {
+//			   Stream<String> s =  EventstoreApplication.set.stream(); 
+//			   log.debug(String.format("%d total pending", EventstoreApplication.set.size()));
+//			 
+//			   s.limit(100)
+//			   .map(x->{
+//				   CommonMethods.sendToEventQueue(x);
+//				   return x; 
+//			   })
+//			   .forEach(x->{
+//				  	if (x != null) {
+//				  		EventstoreApplication.set.remove(x); 
+//				  	}
+//			  });
+//			   log.debug(String.format("%d total remaining", EventstoreApplication.set.size()));
+					Boolean supportingMSRunning = false; 
+				
+					log.debug("checking heart beat");
+					supportingMSRunning = CommonMethods.isNotificationMSAvailable(); 
+					if(EventstoreApplication.control != null) {
+						
+						if(!supportingMSRunning && !restartNeeded){
+							restartNeeded = true; 
+							log.error(">>> Detected Downstream Services(s) have become unavailable --");
+							//throws an wake exception and does not shut down the stream tw - 6-22-18
+						
+//							 final CompletionStage<Done> done = EventstoreApplication.control.shutdown();
+//							 
+//							  done.whenComplete((value, exception) -> {
+//							      log.debug(exception.getLocalizedMessage());
+//							    }); 
+							 
+							 
+						}else if(supportingMSRunning && restartNeeded) {
+							log.info("Starting EventQueueFallOut Processing");
+							if(invokeFalloutOperations3()) restartNeeded = false;  
+						}
+					}else if(EventstoreApplication.control == null && supportingMSRunning) {
+						log.info("Starting EventQueue Processing Stream");
+						AtLeastOnceWithBatchCommitExample.restart();
+					}else {
+						log.error(">>> Detected Downstream Servics(s) are unavailable at during startup -- ");
+					}
+					
+					
+					Thread.sleep(6000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+				log.error("Transaction Consumer :"+e.getLocalizedMessage());
+				break; 
+			}
+		   }
+	   }
+	   
+		private Boolean invokeFalloutOperations3() {
 			
 			String PLATFORM_KAFKA_CLUSTER = EventstoreApplication.PLATFORM_KAFKA_CLUSTER;
 			//Long PLATFORM_KAFKA_WAITTIME =  System.getenv("PLATFORM_KAFKA_WAITTIME") != null ? Long.valueOf(System.getenv("PLATFORM_KAFKA_WAITTIME")) : 10000; 
 			String  PLATFORM_KAFKA_GROUP = EventstoreApplication.PLATFORM_KAFKA_GROUP; 
 			//String  PLATFORM_ZOOKEEPER_PORT = System.getenv("PLATFORM_ZOOKEEPER_PORT"); 
-			String PLATFORM_KAFKA_PINQUEUE = EventstoreApplication.PLATFORM_KAFKA_TOPIC;
+			String PLATFORM_KAFKA_PINQUEUE = String.format("%sFALLOUT", EventstoreApplication.PLATFORM_KAFKA_TOPIC);
 			Integer PLATFORM_KAFKA_LOOPCOUNT = EventstoreApplication.PLATFORM_KAFKA_LOOPCOUNT;
 			Integer PLATFORM_KAFKA_POLLTIME = EventstoreApplication.PLATFORM_KAFKA_POLLTIME;
 			log.error("THIS NOT AN ERROR  - CONFIGURED PLATFORM_KAFKA_LOOPCOUNT :"+PLATFORM_KAFKA_LOOPCOUNT+" && PLATFORM_KAFKA_POLLTIME : "+PLATFORM_KAFKA_POLLTIME);
@@ -73,8 +125,9 @@ public class AsyncThread implements Runnable {
 			props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 			props.put(ConsumerConfig.GROUP_ID_CONFIG, PLATFORM_KAFKA_GROUP);
 			props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+	
 			
-			Boolean supportingMSRunning = false; 
+			//Boolean supportingMSRunning = false; 
 			
 			//Integer fafInitialBatch = EventstoreApplication.FAF_INIT_BATCH; 
 
@@ -84,14 +137,15 @@ public class AsyncThread implements Runnable {
 			topics.add(PLATFORM_KAFKA_PINQUEUE); 
 			log.error("THIS NOT AN ERROR  - ENTERING TRANSACTION LOOPa");
 			 DaaSEventStore daasObject = new DaaSEventStore(); 			
-							while(true) {	
+			 Boolean falloutEmpty = false; 
+							//while(true) {	
 								
-								if(supportingMSRunning) {
+								//if(supportingMSRunning) {
 								
-										log.error("THIS NOT AN ERROR  - Before Transaction SUBSCRIBE");
+										log.debug("THIS NOT AN ERROR  - Before Transaction SUBSCRIBE");
 										KafkaConsumer<String, String> orderConsumer = new KafkaConsumer<>(props);
 										orderConsumer.subscribe(topics);
-										log.error("THIS NOT AN ERROR  - After Transaction SUBSCRIBE");
+										log.debug("THIS NOT AN ERROR  - After Transaction SUBSCRIBE");
 										Gson gson = new Gson(); 
 
 										try {
@@ -100,39 +154,40 @@ public class AsyncThread implements Runnable {
 								
 											while(p < PLATFORM_KAFKA_LOOPCOUNT){
 													p++;
-													log.error("THIS NOT AN ERROR  - Before Transaction POLLING");
+													log.debug("THIS NOT AN ERROR  - Before Transaction POLLING");
 													ConsumerRecords<String, String> records = orderConsumer.poll(PLATFORM_KAFKA_POLLTIME);
-													log.error("THIS NOT AN ERROR  - After Transaction POLLING");
-													log.error("THIS NOT AN ERROR  - P : "+p +" records count "+records.count());
-													int totalSize  = 50;//EventstoreApplication.transactionProcesing.asMap().size();
-													int mustBeCompletedBeforePolling = (int)(totalSize*(50.0f/100.0f)); 
+													log.debug("THIS NOT AN ERROR  - After Transaction POLLING");
+													log.debug("THIS NOT AN ERROR  - P : "+p +" records count "+records.count());
+													//int totalSize  = 50;//EventstoreApplication.transactionProcesing.asMap().size();
+													//int mustBeCompletedBeforePolling = (int)(totalSize*(50.0f/100.0f)); 
 							
-													log.error(String.format("Trying transaction %s percentage to process %s ",50,mustBeCompletedBeforePolling));
+													//log.error(String.format("Trying transaction %s percentage to process %s ",50,mustBeCompletedBeforePolling));
 										
 										//if(supportingMSRunning && EventstoreApplication.transactionProcesing.asMap().size() < fafInitialBatch) {
 												//(AppStarter.transactionProcesing.asMap().isEmpty() || mustBeCompletedBeforePolling <= 20) ){
 											
 											for (ConsumerRecord<String, String> record : records) {
-												log.error(String.format(">>> partition = %s,offset = %d, key = %s, value = %s%n, topic = %s",
+												log.debug(String.format(">>> partition = %s,offset = %d, key = %s, value = %s%n, topic = %s",
 	   		            	 								record.partition(), record.offset(), record.key(), record.value(), record.topic()));
-	   		            	 						if(record.topic().equalsIgnoreCase(EventstoreApplication.PLATFORM_KAFKA_TOPIC)) {
-	   		            	 							JsonParser jsonParser = new JsonParser();
-	   		            	 							JsonElement dmnTree = jsonParser.parse(record.value()); 
-	   		            	 							JsonObject message = dmnTree.getAsJsonObject();
-	   		            	 							if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("process")) {
-	   		            	 								String accountName = message.get("accountName").getAsString(); 
-	   		            	 								String appName = message.get("appname").getAsString(); 
-	   		            	 								daasObject.process(message.toString(), accountName,appName);
-	   		            	 							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
-	   		            	 								
-	   		            	 								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
-	   		            	 								Map<String,Object> map = gson.fromJson(record.value(), type); 
-	   		            	 								daasObject.save(map);
-	   		            	 							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("write")) {
-	   		            	 								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
-	   		            	 								Map<String,Object> map = gson.fromJson(record.value(), type); 
-	   		            	 								daasObject.writePushNotification(map);
-	   		            	 							}
+	   		            	 						if(record.topic().equalsIgnoreCase(PLATFORM_KAFKA_PINQUEUE)) {
+	   		            	 							//JsonParser jsonParser = new JsonParser();
+	   		            	 							//JsonElement dmnTree = jsonParser.parse(record.value()); 
+	   		            	 							CommonMethods.sendToEventQueue(record.value());
+//	   		            	 							JsonObject message = dmnTree.getAsJsonObject();
+//	   		            	 							if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("process")) {
+//	   		            	 								String accountName = message.get("accountName").getAsString(); 
+//	   		            	 								String appName = message.get("appname").getAsString(); 
+//	   		            	 								daasObject.process(message.toString(), accountName,appName);
+//	   		            	 							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
+//	   		            	 								
+//	   		            	 								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+//	   		            	 								Map<String,Object> map = gson.fromJson(record.value(), type); 
+//	   		            	 								daasObject.save(map);
+//	   		            	 							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("write")) {
+//	   		            	 								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+//	   		            	 								Map<String,Object> map = gson.fromJson(record.value(), type); 
+//	   		            	 								daasObject.writePushNotification(map);
+//	   		            	 							}
 	   		            	 						  
 	   		            	 						}
 	   		           	 						
@@ -147,60 +202,43 @@ public class AsyncThread implements Runnable {
 //											}
 //											log.error(String.format("current records still processing are %s %s ",50,mustBeCompletedBeforePolling));
 //										}
-										if(!isNotificationMSAvailable()) break; 
+										if(!CommonMethods.isNotificationMSAvailable()) break; 
+										if(records.count() == 0) falloutEmpty = true;
 								}
 								
 							} catch(Exception ex) {
 								log.error(ex.getMessage());
-								break; 
+								//break; 
 								
 							}finally {
 								orderConsumer.close();
 								orderConsumer = null; 
 								gson = null; 
 							}
-							try {
-								Thread.sleep(6000);
-							} catch (InterruptedException e) {
-								log.error("Transaction Consumer :"+e.getMessage());
-							}
-						}
+//							try {
+//								Thread.sleep(6000);
+//							} catch (InterruptedException e) {
+//								log.error("Transaction Consumer :"+e.getMessage());
+//							}
+						//}
 								
 								
-						log.debug("checking heart beat");
-						supportingMSRunning = isNotificationMSAvailable(); 
-						if(!supportingMSRunning)
-							try {
-									Thread.sleep(6000);
-							} catch (InterruptedException e) {
-								log.error("Transaction Consumer :"+e.getMessage());
-							}
+//						log.debug("checking heart beat");
+//						supportingMSRunning = CommonMethods.isNotificationMSAvailable(); 
+//						if(!supportingMSRunning)
+//							try {
+//									Thread.sleep(6000);
+//							} catch (InterruptedException e) {
+//								log.error("Transaction Consumer :"+e.getMessage());
+//							}
 						
 							
 							
-				 }
+				 //}
+				return falloutEmpty; 
 						
 		}
 		
 		
-		
-		private boolean isNotificationMSAvailable() {
-			boolean available = false; 
-			String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
-			String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
-			String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
-			
-			try {
-				Object notification = CommonMethods.invokeGetExecution(URL,"{}", new RestTemplate());
-				Object dmn = CommonMethods.invokeGetExecution(DMNURL,"{}", new RestTemplate());
-				Object polyglot = CommonMethods.invokeGetExecution(DAASURL,"{}", new RestTemplate());
-				
-				if(notification != null && dmn != null && polyglot != null) available = true; 
-			}catch(Exception ex) {
-				log.error(ex.getLocalizedMessage());
-			}
-			
-			return available; 
-			
-		}
+
 }

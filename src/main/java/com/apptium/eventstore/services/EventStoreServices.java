@@ -3,6 +3,7 @@ package com.apptium.eventstore.services;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
@@ -17,9 +18,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.apptium.eventstore.EventstoreApplication;
 import com.apptium.eventstore.daas.DaaSEventStore;
 import com.apptium.eventstore.models.EventStoreEntry;
+import com.apptium.eventstore.util.CommonMethods;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
 @RestController
@@ -84,7 +89,7 @@ public class EventStoreServices {
 		 
 		 
 		 
-		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(map)); 
+		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage)); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
 				headers,HttpStatus.CREATED);
@@ -113,21 +118,39 @@ public class EventStoreServices {
 		 }
 			 
 		 final String appName =  map.get("appname").toString();  
+		 
 		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage, accountName,appName)); 
-	
+		
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
 				headers,HttpStatus.CREATED);
 	}
 	
 	
 	
-	private Future<String> writeEventStoreEntry(Map<String,Object> eventMessage){
+//	private Future<String> writeEventStoreEntry(Map<String,Object> eventMessage){
+//		CompletableFuture<String> output = new CompletableFuture<>();
+//		try {
+//			 
+//			  //DaaSEventStore daasObject = new DaaSEventStore(); 
+//			  //daasObject.save(eventMessage);
+//			  //daasObject.writePushNotification(eventMessage);
+//			  output.complete("success");
+//		}catch (Exception e) {
+//			  output.completeExceptionally(e);
+//		}
+//			
+//		return output; 
+//	}
+	
+	private Future<String> writeEventStoreEntry(String inputMessage){
 		CompletableFuture<String> output = new CompletableFuture<>();
 		try {
 			 
-			  DaaSEventStore daasObject = new DaaSEventStore(); 
-			  daasObject.save(eventMessage);
-			  daasObject.writePushNotification(eventMessage);
+			JsonParser jsonParser = new JsonParser();
+			JsonElement message = jsonParser.parse(inputMessage); 
+			message.getAsJsonObject().addProperty("action", "process"); 
+			String eventMessage = message.getAsJsonObject().toString(); 
+			CommonMethods.sendToEventQueue(eventMessage);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);
@@ -144,8 +167,16 @@ public class EventStoreServices {
 		CompletableFuture<String> output = new CompletableFuture<>();
 		try {
 			
-			  DaaSEventStore daasObject = new DaaSEventStore(); 
-			  daasObject.process(inputMessage,accountName,appName);
+			 // DaaSEventStore daasObject = new DaaSEventStore(); 
+			  //daasObject.process(inputMessage,accountName,appName);
+			
+			JsonParser jsonParser = new JsonParser();
+			JsonElement message = jsonParser.parse(inputMessage); 
+			message.getAsJsonObject().addProperty("accountName", accountName);
+			message.getAsJsonObject().addProperty("appName", appName);
+			message.getAsJsonObject().addProperty("action", "process"); 
+			String eventMessage = message.getAsJsonObject().toString(); 
+			CommonMethods.sendToEventQueue(eventMessage);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);

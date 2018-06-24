@@ -10,6 +10,6 @@ spring:
     config:
       enabled: true
     bus:
-      enabled: true
+      enabled: false
       amqp:
-        enabled: true
+        enabled: false

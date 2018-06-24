@@ -1,6 +1,5 @@
 package com.apptium.eventstore.daas;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +46,9 @@ public class DaaSEventStore {
 			Timestamp currentUTC = CommonMethods.getCurrentDate();
 			
 	try {		
+			if(!CommonMethods.isNotificationMSAvailable()) throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
+			
+			
 			Object dmnTable = CommonMethods.invokePostExecution2(DMNSymptomsURL, inputMessage, null); 
 			if(dmnTable != null) {
 				
@@ -64,12 +66,19 @@ public class DaaSEventStore {
 						JsonElement rows = jsonParser2.parse(test.iterator().next().getValue().toString());
 						JsonObject ruleItems= rows.getAsJsonObject(); 
 						for(Entry<String, JsonElement> myRow : ruleItems.entrySet()) {
-							LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
+							//LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
 							String row = myRow.getValue().toString(); 
 							map = gson.fromJson(row, map.getClass()); 
-							String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
-							Object distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
+							Object distResult = null; 
+							if(EventstoreApplication.dissimeninationRecords.asMap().containsKey(myRow.getKey())) {
+								//LOG.debug(String.format(" >>>> from cache %s size %d", myRow.getKey(),EventstoreApplication.dissimeninationRecords.asMap().size()));
+								distResult = EventstoreApplication.dissimeninationRecords.asMap().get(myRow.getKey()); 
+							}else {
+								String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
+								 distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
+							}
 							if(distResult != null) {
+								EventstoreApplication.dissimeninationRecords.asMap().put(myRow.getKey(), distResult.toString()); 
 								JsonParser djsonParser = new JsonParser();
 								JsonElement jsonTree = djsonParser.parse(distResult.toString()); 
 								JsonObject dResults = jsonTree.getAsJsonObject(); 
@@ -110,12 +119,28 @@ public class DaaSEventStore {
 			}
 			
 			
+		 }catch(RuntimeException e) {
+				JsonParser jsonParser = new JsonParser();
+				JsonElement message = jsonParser.parse(inputMessage); 
+				message.getAsJsonObject().addProperty("accountName", accountName);
+				message.getAsJsonObject().addProperty("appName", appName);
+				message.getAsJsonObject().addProperty("action", "process"); 
+				String eventMessage = message.getAsJsonObject().toString(); 
+				CommonMethods.sendToEventQueue(eventMessage);
 		 }catch(Exception ex) {
 				JsonParser jsonParser = new JsonParser();
 				JsonElement message = jsonParser.parse(inputMessage); 
 				message.getAsJsonObject().addProperty("accountName", accountName);
 				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
+				message.getAsJsonObject().addProperty("exception", ex.getLocalizedMessage()); 
+				if(message.getAsJsonObject().has("retry")) {
+					Integer counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					counter++; 
+					message.getAsJsonObject().addProperty("retry", counter);
+				}else {
+					message.getAsJsonObject().addProperty("retry", 1);
+				}
 				String eventMessage = message.getAsJsonObject().toString(); 
 				CommonMethods.sendToEventQueue(eventMessage);
 				
@@ -124,7 +149,7 @@ public class DaaSEventStore {
 		}
 
 		
-		public void save(Map<String,Object> pLogMsg) {
+		public void save(Map<String,Object> pLogMsg) throws Exception,RuntimeException {
 			
 			String URL = String.format("%s%s",EventstoreApplication.prop.getProperty("DAASURL"),TRANSACTIONLOG); 
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
@@ -134,21 +159,25 @@ public class DaaSEventStore {
 			
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
+				if(!CommonMethods.isNotificationMSAvailable()) throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
 				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-					LOG.debug(String.format("Event Store %s - %s successfully created", 
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//					LOG.debug(String.format("Event Store %s - %s successfully created", 
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 					//writePushNotification(pLogMsg); 
 				}else{
 					LOG.error(String.format("Event Store %s - %s not created",
 							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
 				}
-			}catch(Exception ex) {
-				LOG.error(String.format("Event Store %s - %s not created, exception %s",
+			 }catch(RuntimeException e) {
+				 throw e;
+			 }catch(Exception ex) {
+				LOG.error(String.format("Event Store %s - %s Not Saved, Exception %s",
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
-				
-				pLogMsg.put("action", "save"); 
-				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
-				CommonMethods.sendToEventQueue(inputMessage);
+//				
+//				pLogMsg.put("action", "save"); 
+//				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
+//				CommonMethods.sendToEventQueueFallOut(inputMessage);
+				throw ex; 
 
 			}
 			
@@ -158,26 +187,26 @@ public class DaaSEventStore {
 		 * POST the event message to the Notification for Push Processing
 		 * @param pLogMsg
 		 */
-		public void writePushNotification(Map<String,Object> pLogMsg) {
+		public void writePushNotification(Map<String,Object> pLogMsg) throws RuntimeException{
 			
-			String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
+			//String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
-				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
-					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-				}else{
-					LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
-							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
-				}
+				CommonMethods.sendToPushQueue(tlog);
+				
+//				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
+//					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//				}else{
+//					LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created",
+//							pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString()));
+//				}
 			}catch(Exception ex) {
-				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not created, Exception %s",
+				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not writtent to PushQueue, Exception %s",
 						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
 				
-				pLogMsg.put("action", "write"); 
-				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
-				CommonMethods.sendToEventQueue(inputMessage);
+				throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
 			}
 		}
 		
