@@ -15,10 +15,12 @@ import org.springframework.core.env.Environment;
 
 import com.apptium.eventstore.actors.AtLeastOnceWithBatchCommitExample;
 import com.apptium.eventstore.util.AsyncThread;
+import com.apptium.eventstore.util.CommonMethods;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import akka.actor.ActorSystem;
+import akka.kafka.javadsl.Consumer;
 import scala.concurrent.duration.Duration;
 
 @Configuration
@@ -39,12 +41,16 @@ public class EventstoreApplication {
 	public static String PLATFORM_KAFKA_GROUP; 
 	public static int PLATFORM_KAFKA_LOOPCOUNT; 
 	public static int PLATFORM_KAFKA_POLLTIME; 
+	public static String PUSHQUEUE; 
 	
 	public static  ActorSystem system = null; 
 
 	public static Cache<String,String> dissimeninationRecords; 
+	public static Integer RETRYLIMIT; 
 	public static final int cacheTTL = 300; 
-	public static Set<String> set; //= ConcurrentHashMap.newKeySet();
+	//public static Set<String> set; //= ConcurrentHashMap.newKeySet();
+	
+	public static Consumer.Control control; 
 	
 	public static void main(String[] args) {
 		 ctx = SpringApplication.run(EventstoreApplication.class, args);
@@ -55,7 +61,9 @@ public class EventstoreApplication {
 			
 			PLATFORM_KAFKA_PORT = prop.getProperty("PLATFORM_KAFKA_PORT") != null ? prop.getProperty("PLATFORM_KAFKA_PORT") : null;
 			
-			PLATFORM_KAFKA_TOPIC = prop.getProperty("PLATFORM_KAFKA_TOPIC") != null ? prop.getProperty("PLATFORM_KAFKA_TOPIC") : null;
+			PLATFORM_KAFKA_TOPIC = prop.getProperty("PLATFORM_KAFKA_TOPIC") != null ? prop.getProperty("PLATFORM_KAFKA_TOPIC") : "EventQueue";
+			
+			PUSHQUEUE = prop.getProperty("PUSHQUEUE") != null ? prop.getProperty("PUSHQUEUE") : "PushQueue";
 			
 			PLATFORM_KAFKA_CLUSTER = prop.getProperty("PLATFORM_KAFKA_CLUSTER") != null ? prop.getProperty("PLATFORM_KAFKA_CLUSTER") : null;
 				
@@ -67,15 +75,19 @@ public class EventstoreApplication {
 			
 			PLATFORM_KAFKA_POLLTIME = prop.getProperty("PLATFORM_KAFKA_POLLTIME") != null ?  Integer.parseInt(prop.getProperty("PLATFORM_KAFKA_POLLTIME").toString()) : 5000;
 			
+			RETRYLIMIT =  prop.getProperty("RETRYLIMIT") != null ?  Integer.parseInt(prop.getProperty("RETRYLIMIT").toString()) : 3;
+			
 			dissimeninationRecords = CacheBuilder.newBuilder().maximumSize(5000).expireAfterAccess(cacheTTL, TimeUnit.SECONDS).build();
 			
 //			if(PLATFORM_USE_WRITE_EVENT_QUEUE) {
 //				Runnable r = new AsyncThread();
 //				new Thread(r).start();
 //			}
-			set = ConcurrentHashMap.newKeySet();
+			//set = ConcurrentHashMap.newKeySet();
 			
+			//if(CommonMethods.isNotificationMSAvailable()) 
 			AtLeastOnceWithBatchCommitExample.main(args);
+			
 			gcRunner(); 
 		}
 	

@@ -161,11 +161,12 @@ public class CommonMethods {
 			}else if(e.getMessage().contains("500")) {
 				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 			}else {
-				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500"));
+				throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage()));
 			}
 			
 		} catch (Exception e) {
 			logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+			throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage()));
 		}
 		return myObject;
 	}
@@ -366,6 +367,38 @@ public class CommonMethods {
 		
 	}
 	
+	public static void sendToEventQueueFallOut(String inputMessage) {
+		Map<String, Object> props = new HashMap<>();
+		
+		if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+			logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
+			return; 
+		}
+		
+		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+		}else {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+		}
+		props.put(ProducerConfig.RETRIES_CONFIG, 0);
+		props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+		props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		
+	
+		try {
+			Producer<String, String> producer = new KafkaProducer<>(props);
+			String topic = String.format("%sFALLOUT", EventstoreApplication.PLATFORM_KAFKA_TOPIC);
+			producer.send(new ProducerRecord<String, String>(topic,inputMessage));
+	        producer.close();
+		} catch (Exception e) {
+			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+		}
+		
+	}
+	
 	
 	public static void sendToPushQueue(String inputMessage) {
 		Map<String, Object> props = new HashMap<>();
@@ -390,7 +423,7 @@ public class CommonMethods {
 	
 		try {
 			Producer<String, String> producer = new KafkaProducer<>(props);
-			producer.send(new ProducerRecord<String, String>("PushQueue",inputMessage));
+			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PUSHQUEUE,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
 			logger.error("Exception on sendToProcessQueue "+e.getMessage());
@@ -398,6 +431,37 @@ public class CommonMethods {
 		
 	}
 	
-	
-	
+	public static boolean isNotificationMSAvailable() {
+		boolean available = false; 
+		String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
+		String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
+		//String URL = EventstoreApplication.prop.getProperty("PUSHNOTIFICATIONURL"); 
+		
+		try {
+			//Object notification = CommonMethods.invokeGetExecution(URL,"{}", new RestTemplate());
+			Object dmn = CommonMethods.invokeGetExecution(DMNURL,"{}", new RestTemplate());
+			Object polyglot = CommonMethods.invokeGetExecution(DAASURL,"{}", new RestTemplate());
+			
+			//if(notification != null && dmn != null && polyglot != null) available = true; 
+			if(dmn != null && polyglot != null) available = true; 
+			if(!available) Thread.sleep(500);
+		}catch(Exception ex) {
+			logger.error(ex.getLocalizedMessage());
+		}
+		
+		return available; 
+		
+	}
+	/***
+	 * 
+	 * @return
+	 */
+	public static String getKafkaBootStrap() {
+		String bootStrapServerConfig = EventstoreApplication.PLATFORM_KAFKA_CLUSTER; 
+		
+		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) 
+			bootStrapServerConfig = EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT;
+		
+		return bootStrapServerConfig; 
+	}
 }

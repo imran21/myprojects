@@ -1,7 +1,5 @@
 package com.apptium.eventstore.actors;
 
-import java.lang.reflect.Type;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
@@ -11,11 +9,11 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 
 import com.apptium.eventstore.EventstoreApplication;
 import com.apptium.eventstore.daas.DaaSEventStore;
+import com.apptium.eventstore.util.CommonMethods;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.typesafe.config.Config;
 
 import akka.event.Logging;
@@ -35,7 +33,7 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 	
 	final ConsumerSettings<String, byte[]> consumerSettings =
 		    ConsumerSettings.create(config, new StringDeserializer(), new ByteArrayDeserializer())
-		        .withBootstrapServers("localhost:9094,localhost:9095,localhost:9096")
+		        .withBootstrapServers(CommonMethods.getKafkaBootStrap())
 		        .withGroupId(EventstoreApplication.PLATFORM_KAFKA_GROUP)
 		        .withProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true")
 		        .withProperty(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "5000")
@@ -47,15 +45,17 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 	
 	
 	  public static void main(String[] args) {
-		    new AtLeastOnceWithBatchCommitExample().demo();
-		    
-		    
-	
-		  }
+		    new AtLeastOnceWithBatchCommitExample().demo();	   
+	  }
+	  
+	  public static void restart() {
+		  new AtLeastOnceWithBatchCommitExample().demo();	   
+	  }
 	
 		  public void demo() {
 		    // #atLeastOnceBatch
 		//    Consumer.Control control =
+			  EventstoreApplication.control = 
 		        Consumer.committableSource(consumerSettings, Subscriptions.topics(EventstoreApplication.PLATFORM_KAFKA_TOPIC))
 		            .mapAsync(1, msg ->
 		                business(msg.record().key(), msg.record().value())
@@ -79,20 +79,30 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 							JsonParser jsonParser = new JsonParser();
 							JsonElement dmnTree = jsonParser.parse(s); 
 							JsonObject message = dmnTree.getAsJsonObject();
-							if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("process")) {
+							//if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("process")) {
 								String accountName = message.get("accountName").getAsString(); 
-								String appName = message.get("appname").getAsString(); 
-								daasObject.process(message.toString(), accountName,appName);
-							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
-								
-								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
-								Map<String,Object> map = gson.fromJson(s, type); 
-								daasObject.save(map);
-							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("write")) {
-								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
-								Map<String,Object> map = gson.fromJson(s, type); 
-								daasObject.writePushNotification(map);
-							}
+								String appName = message.get("appname").getAsString();
+								Integer retryCounter = 0; 
+								if(message.has("retry")) {
+									retryCounter = message.get("retry").getAsInt(); 
+								}
+								if(retryCounter >= EventstoreApplication.RETRYLIMIT) {
+									CommonMethods.sendToEventQueueFallOut(message.toString());
+									log.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>  key = %s, value = %s ",key, s));
+									
+								}else {
+									daasObject.process(message.toString(), accountName,appName);
+								}
+//							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
+//								
+//								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+//								Map<String,Object> map = gson.fromJson(s, type); 
+//								daasObject.save(map);
+//							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("write")) {
+//								Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+//								Map<String,Object> map = gson.fromJson(s, type); 
+//								daasObject.writePushNotification(map);
+//							}
 						  
 				
 		    return CompletableFuture.completedFuture("");
