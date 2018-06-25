@@ -184,8 +184,49 @@ public class EventStoreServices {
 			
 		return output; 
 	}
+	/**
+	 * 
+	 * @return
+	 */
+	@RequestMapping(method=RequestMethod.DELETE,value="/clear/cache/{ruleId}" )
+	public ResponseEntity<?> clearCachce(@PathVariable("accountName")String ruleId) {
 	
+		HttpHeaders headers = new HttpHeaders(); 
+		try {
+			EventstoreApplication.dissimeninationRecords.asMap().remove(ruleId);
+			
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Success","Cache cleared for rule "+ruleId),
+						headers,HttpStatus.OK);
+
+		}catch(UnsupportedOperationException e) {
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Error","Cache not cleared"),
+						headers,HttpStatus.BAD_REQUEST);
+
+		}
+			 
+		
+	}
 	
+	@RequestMapping(method=RequestMethod.DELETE,value="/clear/cache/all" )
+	public ResponseEntity<?> clearCachce() {
+	
+		HttpHeaders headers = new HttpHeaders(); 
+		try {
+			EventstoreApplication.dissimeninationRecords.asMap().clear();
+			
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Success","Caches cleared"),
+						headers,HttpStatus.OK);
+
+		}catch(UnsupportedOperationException e) {
+			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Error","Caches not cleared"),
+						headers,HttpStatus.BAD_REQUEST);
+
+		}
+			 
+		
+	}
+
+
 	
 	
 }
