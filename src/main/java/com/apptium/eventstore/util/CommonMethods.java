@@ -468,7 +468,12 @@ public class CommonMethods {
 		return bootStrapServerConfig; 
 	}
 	
-	
+	/**
+	 * 
+	 * @param s
+	 * @param offset
+	 * @param errorMessage
+	 */
 public static void StreamExceptionHandler(String s,long offset,String errorMessage) {
 		
 		try {

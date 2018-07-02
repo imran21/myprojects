@@ -24,7 +24,11 @@ import akka.kafka.javadsl.Consumer;
 import akka.stream.javadsl.Sink;
 
 
-
+/***
+ * 
+ * @author taftwallaceiii
+ *
+ */
 public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 	
 	final Config config = system.settings().config().getConfig("akka.kafka.consumer");
