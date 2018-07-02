@@ -30,6 +30,9 @@ import com.apptium.eventstore.EventstoreApplication;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 public class CommonMethods {
 	//static final Logger logger = LogManager.getLogger(CommonMethods.class);
@@ -327,9 +330,9 @@ public class CommonMethods {
 			if(e.getMessage().contains("404")){
 				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
-				throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 			}else {
-				throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage())); 
+				//throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage())); 
 			}
 		} 
 		return myObject;
@@ -463,5 +466,26 @@ public class CommonMethods {
 			bootStrapServerConfig = EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT;
 		
 		return bootStrapServerConfig; 
+	}
+	
+	/**
+	 * 
+	 * @param s
+	 * @param offset
+	 * @param errorMessage
+	 */
+public static void StreamExceptionHandler(String s,long offset,String errorMessage) {
+		
+		try {
+			JsonParser jsonParser = new JsonParser();
+			JsonElement dmnTree = jsonParser.parse(s); 
+			JsonObject message = dmnTree.getAsJsonObject();
+			logger.error(String.format("<<>> Send to EventQueueFallout cause %s >>>  offset = %d, value = %s ",errorMessage,offset, s));
+			CommonMethods.sendToEventQueueFallOut(message.toString());
+		
+		}catch(Exception ex) {
+			logger.error(String.format("%s %s %d", ex.getLocalizedMessage(),s,offset));
+		}
+		
 	}
 }
