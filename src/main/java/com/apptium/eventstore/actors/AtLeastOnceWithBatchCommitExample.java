@@ -97,7 +97,11 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 									log.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   offset = %d, value = %s ",offset, s));
 									
 								}else {
-									daasObject.process(message.toString(), accountName,appName);
+									if(message.has("eventId")) {
+										daasObject.process2(message.toString(), accountName,appName,message.get("eventId").getAsString());
+									}else {
+										daasObject.process(message.toString(), accountName,appName);
+									}
 								}
 //							}else if(message.has("action") && message.get("action").getAsString().equalsIgnoreCase("save")) {
 //								
