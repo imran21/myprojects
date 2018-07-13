@@ -73,10 +73,14 @@ public class DaaSEventStore {
 							if(EventstoreApplication.dissimeninationRecords.asMap().containsKey(myRow.getKey())) {
 								//LOG.debug(String.format(" >>>> from cache %s size %d", myRow.getKey(),EventstoreApplication.dissimeninationRecords.asMap().size()));
 								distResult = EventstoreApplication.dissimeninationRecords.asMap().get(myRow.getKey()); 
-							}else {
-								String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
+							}
+							
+							if(distResult == null) 
+							{
+								 String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
 								 distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
 							}
+							
 							if(distResult != null) {
 								EventstoreApplication.dissimeninationRecords.asMap().put(myRow.getKey(), distResult.toString()); 
 								JsonParser djsonParser = new JsonParser();
@@ -148,6 +152,63 @@ public class DaaSEventStore {
 			
 		}
 
+		/**
+		 * process message that already have their events id, internal event message from DM
+		 * @param inputMessage
+		 * @param accountName
+		 * @param appName
+		 * @param eventId
+		 */
+		public void process2(String inputMessage,String accountName,String appName,String eventId){
+
+			Timestamp currentUTC = CommonMethods.getCurrentDate();
+			
+	try {		
+			if(!CommonMethods.isNotificationMSAvailable()) throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
+			
+			
+	
+					Map<String,Object> pLogMsg = new HashMap<String,Object>(); 
+												
+					pLogMsg.put("eventId", eventId); 
+					pLogMsg.put("timeStamp", currentUTC.getTime()); 
+					pLogMsg.put("eventdata", inputMessage); 
+					pLogMsg.put("accountname",accountName); 
+					pLogMsg.put("appname", appName); 
+					pLogMsg.put("objectId",UUID.randomUUID().toString()); 
+					save(pLogMsg); 
+					writePushNotification(pLogMsg); 
+				
+			
+		 }catch(RuntimeException e) {
+				JsonParser jsonParser = new JsonParser();
+				JsonElement message = jsonParser.parse(inputMessage); 
+				message.getAsJsonObject().addProperty("accountName", accountName);
+				message.getAsJsonObject().addProperty("appName", appName);
+				message.getAsJsonObject().addProperty("action", "process"); 
+				String eventMessage = message.getAsJsonObject().toString(); 
+				CommonMethods.sendToEventQueue(eventMessage);
+		 }catch(Exception ex) {
+				JsonParser jsonParser = new JsonParser();
+				JsonElement message = jsonParser.parse(inputMessage); 
+				message.getAsJsonObject().addProperty("accountName", accountName);
+				message.getAsJsonObject().addProperty("appName", appName);
+				message.getAsJsonObject().addProperty("action", "process"); 
+				message.getAsJsonObject().addProperty("exception", ex.getLocalizedMessage()); 
+				if(message.getAsJsonObject().has("retry")) {
+					Integer counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					counter++; 
+					message.getAsJsonObject().addProperty("retry", counter);
+				}else {
+					message.getAsJsonObject().addProperty("retry", 1);
+				}
+				String eventMessage = message.getAsJsonObject().toString(); 
+				CommonMethods.sendToEventQueue(eventMessage);
+				
+		 }
+			
+		}
+		
 		
 		public void save(Map<String,Object> pLogMsg) throws Exception,RuntimeException {
 			

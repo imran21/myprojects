@@ -23,7 +23,9 @@ import com.apptium.eventstore.daas.DaaSEventStore;
 import com.apptium.eventstore.models.EventStoreEntry;
 import com.apptium.eventstore.util.CommonMethods;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 
@@ -87,9 +89,41 @@ public class EventStoreServices {
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AppName"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
+		 JsonArray documents = new JsonArray(); 
+		 JsonObject item = new JsonObject(); 
 		 
+		 if(map.containsKey("eventdata")) {
+			 JsonParser parser = new JsonParser(); 
+			 JsonElement eventdata = parser.parse(map.get("eventdata").toString()); 
+			 
+			 if(eventdata.getAsJsonObject().has("name")) {
+				item.addProperty("name", eventdata.getAsJsonObject().get("name").getAsString());
+			 }
+			 
+			 if(eventdata.getAsJsonObject().has("comments")) {
+					item.addProperty("comments", eventdata.getAsJsonObject().get("comments").getAsString());
+			  }
+			 
+			 if(eventdata.getAsJsonObject().has("tags")) {
+					item.addProperty("tags", eventdata.getAsJsonObject().get("tags").getAsString());
+			  }
+			 
+		 }
 		 
-		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage)); 
+		 item.addProperty("objectid",map.get("objectId").toString()); 
+		 item.addProperty("xpriority", 1); 
+		 
+		 JsonObject inputMessage = new JsonObject(); 
+		 //String appName =  map.get("appname").toString(); 
+		 //String accountName =  map.get("accountname").toString(); 
+		 inputMessage.addProperty("appname", map.get("appname").toString());
+		 inputMessage.addProperty("accountName", map.get("accountname").toString());
+		 inputMessage.addProperty("eventId", map.get("eventId").toString());
+		 inputMessage.addProperty("action", "process"); 
+		 documents.add(item);
+		 inputMessage.add("document", documents);
+		 
+		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(inputMessage.toString())); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
 				headers,HttpStatus.CREATED);
@@ -146,11 +180,11 @@ public class EventStoreServices {
 		CompletableFuture<String> output = new CompletableFuture<>();
 		try {
 			 
-			JsonParser jsonParser = new JsonParser();
-			JsonElement message = jsonParser.parse(inputMessage); 
-			message.getAsJsonObject().addProperty("action", "process"); 
-			String eventMessage = message.getAsJsonObject().toString(); 
-			CommonMethods.sendToEventQueue(eventMessage);
+//			JsonParser jsonParser = new JsonParser();
+//			JsonElement message = jsonParser.parse(inputMessage); 
+//			message.getAsJsonObject().addProperty("action", "process"); 
+//			String eventMessage = message.getAsJsonObject().toString(); 
+			CommonMethods.sendToEventQueue(inputMessage);
 			  output.complete("success");
 		}catch (Exception e) {
 			  output.completeExceptionally(e);
