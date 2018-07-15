@@ -62,68 +62,67 @@ public class EventStoreServices {
 	@RequestMapping(method=RequestMethod.POST)
 	public ResponseEntity<?> create(@RequestBody String eventMessage) {
 		HttpHeaders headers = new HttpHeaders(); 
-		 Gson gson = new Gson();
-		 Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
-		 Map<String,Object> map = gson.fromJson(eventMessage, type); 
-		 if(!map.containsKey("objectId"))
+//		 Gson gson = new Gson();
+//		 Type type = new TypeToken<Map<String,Object>>(){}.getType(); 
+//		 Map<String,Object> map = gson.fromJson(eventMessage, type); 
+		 
+		 JsonParser parser = new JsonParser(); 
+		 JsonElement eventdata = parser.parse(eventMessage); 
+		 
+		 if(!eventdata.getAsJsonObject().has("objectId"))
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing objectId"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
-		 if(!map.containsKey("timeStamp"))
-			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing timeStamp"),
-						headers,HttpStatus.BAD_REQUEST);
-		 
-		 if(!map.containsKey("url"))
-			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing url"),
-						headers,HttpStatus.BAD_REQUEST);
-		 
-		 if(!map.containsKey("eventId"))
+		 if(!eventdata.getAsJsonObject().has("timeStamp"))
+			 eventdata.getAsJsonObject().addProperty("timeStamp", System.currentTimeMillis());
+		 		 
+		 if(!eventdata.getAsJsonObject().has("eventId"))
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing eventId"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
-		 if(!map.containsKey("accountname"))
+		 if(!eventdata.getAsJsonObject().has("accountName"))
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AccountName"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
-		 if(!map.containsKey("appname"))
+		 if(!eventdata.getAsJsonObject().has("appname"))
 			 return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Missing","Event Store Message is missing AppName"),
 						headers,HttpStatus.BAD_REQUEST);
 		 
-		 JsonArray documents = new JsonArray(); 
-		 JsonObject item = new JsonObject(); 
+//		 JsonArray documents = new JsonArray(); 
+//		 JsonObject item = new JsonObject(); 
+//		 
+//		 if(map.containsKey("eventdata")) {
+//			 JsonParser parser = new JsonParser(); 
+//			 JsonElement eventdata = parser.parse(map.get("eventdata").toString()); 
+//			 
+//			 if(eventdata.getAsJsonObject().has("name")) {
+//				item.addProperty("name", eventdata.getAsJsonObject().get("name").getAsString());
+//			 }
+//			 
+//			 if(eventdata.getAsJsonObject().has("comments")) {
+//					item.addProperty("comments", eventdata.getAsJsonObject().get("comments").getAsString());
+//			  }
+//			 
+//			 if(eventdata.getAsJsonObject().has("tags")) {
+//					item.addProperty("tags", eventdata.getAsJsonObject().get("tags").getAsString());
+//			  }
+//			 
+//		 }
+//		 
+//		 item.addProperty("objectid",map.get("objectId").toString()); 
+//		 item.addProperty("xpriority", 1); 
+//		 
+//		 JsonObject inputMessage = new JsonObject(); 
+//		 //String appName =  map.get("appname").toString(); 
+//		 //String accountName =  map.get("accountname").toString(); 
+//		 inputMessage.addProperty("appname", map.get("appname").toString());
+//		 inputMessage.addProperty("accountName", map.get("accountname").toString());
+//		 inputMessage.addProperty("eventId", map.get("eventId").toString());
+//		 inputMessage.addProperty("action", "process"); 
+//		 documents.add(item);
+//		 inputMessage.add("document", documents);
 		 
-		 if(map.containsKey("eventdata")) {
-			 JsonParser parser = new JsonParser(); 
-			 JsonElement eventdata = parser.parse(map.get("eventdata").toString()); 
-			 
-			 if(eventdata.getAsJsonObject().has("name")) {
-				item.addProperty("name", eventdata.getAsJsonObject().get("name").getAsString());
-			 }
-			 
-			 if(eventdata.getAsJsonObject().has("comments")) {
-					item.addProperty("comments", eventdata.getAsJsonObject().get("comments").getAsString());
-			  }
-			 
-			 if(eventdata.getAsJsonObject().has("tags")) {
-					item.addProperty("tags", eventdata.getAsJsonObject().get("tags").getAsString());
-			  }
-			 
-		 }
-		 
-		 item.addProperty("objectid",map.get("objectId").toString()); 
-		 item.addProperty("xpriority", 1); 
-		 
-		 JsonObject inputMessage = new JsonObject(); 
-		 //String appName =  map.get("appname").toString(); 
-		 //String accountName =  map.get("accountname").toString(); 
-		 inputMessage.addProperty("appname", map.get("appname").toString());
-		 inputMessage.addProperty("accountName", map.get("accountname").toString());
-		 inputMessage.addProperty("eventId", map.get("eventId").toString());
-		 inputMessage.addProperty("action", "process"); 
-		 documents.add(item);
-		 inputMessage.add("document", documents);
-		 
-		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(inputMessage.toString())); 
+		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage)); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
 				headers,HttpStatus.CREATED);
