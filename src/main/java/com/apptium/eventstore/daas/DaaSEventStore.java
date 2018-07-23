@@ -65,21 +65,22 @@ public class DaaSEventStore {
 						JsonParser jsonParser2 = new JsonParser();
 						JsonElement rows = jsonParser2.parse(test.iterator().next().getValue().toString());
 						JsonObject ruleItems= rows.getAsJsonObject(); 
+						List<String> eventProcessed = new ArrayList<String>(); 
 						for(Entry<String, JsonElement> myRow : ruleItems.entrySet()) {
 							//LOG.info(myRow.getKey()+" "+myRow.getValue().toString());
 							String row = myRow.getValue().toString(); 
 							map = gson.fromJson(row, map.getClass()); 
 							Object distResult = null; 
-							if(EventstoreApplication.dissimeninationRecords.asMap().containsKey(myRow.getKey())) {
-								//LOG.debug(String.format(" >>>> from cache %s size %d", myRow.getKey(),EventstoreApplication.dissimeninationRecords.asMap().size()));
-								distResult = EventstoreApplication.dissimeninationRecords.asMap().get(myRow.getKey()); 
-							}
-							
-							if(distResult == null) 
-							{
+//							if(EventstoreApplication.dissimeninationRecords.asMap().containsKey(myRow.getKey())) {
+//								//LOG.debug(String.format(" >>>> from cache %s size %d", myRow.getKey(),EventstoreApplication.dissimeninationRecords.asMap().size()));
+//								distResult = EventstoreApplication.dissimeninationRecords.asMap().get(myRow.getKey()); 
+//							}
+//							
+//							if(distResult == null) 
+//							{
 								 String DMNDISURL = String.format("%s/dMNDisseminations/search/findAllByRuleId?ruleId=%s", DAASURL,myRow.getKey()); 
 								 distResult = CommonMethods.invokeGetExecution(DMNDISURL, "{}", null); 
-							}
+							//}
 							
 							if(distResult != null) {
 								EventstoreApplication.dissimeninationRecords.asMap().put(myRow.getKey(), distResult.toString()); 
@@ -106,8 +107,17 @@ public class DaaSEventStore {
 												pLogMsg.put("accountname",accountName); 
 												pLogMsg.put("appname", appName); 
 												pLogMsg.put("objectId",UUID.randomUUID().toString()); 
-												save(pLogMsg); 
-												if(pPushMsg == null) pPushMsg = pLogMsg; 
+												
+												  if(!eventProcessed.contains(eventId)) {
+													 save(pLogMsg); 
+//													 if(pPushMsg == null) pPushMsg = pLogMsg; 
+//												
+//													 if(pPushMsg != null && !pPushMsg.isEmpty())
+														writePushNotification(pLogMsg); 
+													 eventProcessed.add(eventId); 
+												   }
+												}
+											
 				
 											}
 										}
@@ -117,9 +127,7 @@ public class DaaSEventStore {
 							}
 						
 					}
-				if(pPushMsg != null && !pPushMsg.isEmpty())
-					writePushNotification(pPushMsg); 
-				}
+			
 			}
 			
 			
