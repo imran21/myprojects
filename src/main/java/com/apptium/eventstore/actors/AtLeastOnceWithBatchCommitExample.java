@@ -18,6 +18,7 @@ import com.typesafe.config.Config;
 
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
+import akka.japi.Pair;
 import akka.kafka.ConsumerSettings;
 import akka.kafka.Subscriptions;
 import akka.kafka.javadsl.Consumer;
@@ -60,9 +61,10 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 		    // #atLeastOnceBatch
 		//    Consumer.Control control =
 			  EventstoreApplication.control = 
-		        Consumer.committableSource(consumerSettings, Subscriptions.topics(EventstoreApplication.PLATFORM_KAFKA_TOPIC))
+		        Consumer.committablePartitionedSource(consumerSettings, Subscriptions.topics(EventstoreApplication.PLATFORM_KAFKA_TOPIC ))
+		        .flatMapMerge(maxPartitions, Pair::second)
 		            .mapAsync(1, msg ->
-		                business(msg.record().key(), msg.record().value(),msg.record().offset())
+		                business(msg.record().key(), msg.record().value(),msg.record().offset(),msg.record().partition())
 		                        .thenApply(done -> msg.committableOffset())
 		            )
 //		            .batch(
@@ -76,9 +78,9 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 		    // #atLeastOnceBatch
 		  }
 
-		  CompletionStage<String> business(String key, byte[] value, long offset) { // .... }
+		  CompletionStage<String> business(String key, byte[] value, long offset,int partition) { // .... }
 				String s = new String(value);
-				log.info(String.format(">>>  key = %s,  offset= %d, value = %s",key,offset, s ));
+				log.info(String.format(">>>  key = %s,  offset= %d, partition = %s, value = %s ",key,offset,partition,s ));
 						try {
 							JsonParser jsonParser = new JsonParser();
 							JsonElement dmnTree = jsonParser.parse(s); 
