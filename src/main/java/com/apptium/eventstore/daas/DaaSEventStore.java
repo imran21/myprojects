@@ -183,7 +183,13 @@ public class DaaSEventStore {
 					pLogMsg.put("eventdata", inputMessage); 
 					pLogMsg.put("accountname",accountName); 
 					pLogMsg.put("appname", appName); 
-					pLogMsg.put("objectId",UUID.randomUUID().toString()); 
+					JsonParser jsonParser = new JsonParser();
+					JsonElement message = jsonParser.parse(inputMessage); 
+					if(message.getAsJsonObject().has("objectId")) {
+						pLogMsg.put("objectId",message.getAsJsonObject().get("objectId").getAsString());
+					}else {
+						pLogMsg.put("objectId",UUID.randomUUID().toString());
+					}
 					save(pLogMsg); 
 					writePushNotification(pLogMsg); 
 				
