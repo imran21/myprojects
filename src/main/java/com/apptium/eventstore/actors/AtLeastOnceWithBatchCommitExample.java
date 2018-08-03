@@ -100,6 +100,7 @@ public class AtLeastOnceWithBatchCommitExample extends ConsumerBase {
 									
 								}else {
 									if(message.has("eventId")) {
+										log.info(String.format("internal event %s", message.get("eventId").getAsString()));
 										daasObject.process2(message.toString(), accountName,appName,message.get("eventId").getAsString());
 									}else {
 										daasObject.process(message.toString(), accountName,appName);

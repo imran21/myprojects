@@ -186,8 +186,10 @@ public class DaaSEventStore {
 					JsonParser jsonParser = new JsonParser();
 					JsonElement message = jsonParser.parse(inputMessage); 
 					if(message.getAsJsonObject().has("objectId")) {
+						LOG.info(String.format("internal event %s", message.getAsJsonObject().get("objectId").getAsString()));
 						pLogMsg.put("objectId",message.getAsJsonObject().get("objectId").getAsString());
 					}else {
+						LOG.info(String.format("External event %s", inputMessage));
 						pLogMsg.put("objectId",UUID.randomUUID().toString());
 					}
 					save(pLogMsg); 
