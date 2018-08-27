@@ -5,7 +5,7 @@
 
 	<groupId>com.apptium</groupId>
 	<artifactId>eportal-eventstore</artifactId>
-	<version>1.7.0</version>
+	<version>1.9.0</version>
 	<packaging>jar</packaging>
 
 	<name>eventstore</name>
