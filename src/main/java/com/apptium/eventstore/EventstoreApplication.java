@@ -1,7 +1,5 @@
 package com.apptium.eventstore;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -13,9 +11,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import com.apptium.eventstore.actors.AtLeastOnceWithBatchCommitExample;
-import com.apptium.eventstore.util.AsyncThread;
+import com.apptium.eventstore.actors.ExternalOffsetStorageExample;
 import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.eventstore.util.RedisBPMNCache;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
@@ -42,8 +40,11 @@ public class EventstoreApplication {
 	public static int PLATFORM_KAFKA_LOOPCOUNT; 
 	public static int PLATFORM_KAFKA_POLLTIME; 
 	public static String PUSHQUEUE; 
+	public static Long RETRY_BASE_DURATION; 
+	public static int PLATFORM_KAFKA_PARTITION; 
 	
 	public static  ActorSystem system = null; 
+	private static RedisBPMNCache cache = null; 
 
 	public static Cache<String,String> dissimeninationRecords; 
 	public static Integer RETRYLIMIT; 
@@ -77,6 +78,10 @@ public class EventstoreApplication {
 			
 			RETRYLIMIT =  prop.getProperty("RETRYLIMIT") != null ?  Integer.parseInt(prop.getProperty("RETRYLIMIT").toString()) : 3;
 			
+			RETRY_BASE_DURATION =  prop.getProperty("RETRY_BASE_DURATION") != null ?  Long.parseLong(prop.getProperty("RETRY_BASE_DURATION").toString()) : 60000;
+			
+			PLATFORM_KAFKA_PARTITION = prop.getProperty("PLATFORM_KAFKA_PARTITION") != null ?  Integer.parseInt(prop.getProperty("PLATFORM_KAFKA_PARTITION").toString().trim()) : 0;
+			
 			dissimeninationRecords = CacheBuilder.newBuilder().maximumSize(5000).expireAfterAccess(cacheTTL, TimeUnit.SECONDS).build();
 			
 //			if(PLATFORM_USE_WRITE_EVENT_QUEUE) {
@@ -85,11 +90,20 @@ public class EventstoreApplication {
 //			}
 			//set = ConcurrentHashMap.newKeySet();
 			
-			//if(CommonMethods.isNotificationMSAvailable()) 
-			AtLeastOnceWithBatchCommitExample.main(args);
+			if(CommonMethods.isNotificationMSAvailable()) { 
+			//AtLeastOnceWithBatchCommitExample.main(args);
 			
+		
+				ExternalOffsetStorageExample.main(args);
+			
+				ExternalOffsetStorageExample.startRetryConsumer(1);
+				ExternalOffsetStorageExample.startRetryConsumer(2);
+				ExternalOffsetStorageExample.startRetryConsumer(3);
+			}
 			gcRunner(); 
 		}
+	
+	
 	
 	private static void gcRunner() {
 		system.scheduler().schedule(
@@ -105,5 +119,10 @@ public class EventstoreApplication {
 					
 				},system.dispatcher());
 
+	}
+	
+	public static RedisBPMNCache getCacheBPMN(){
+		if(cache == null) cache = new RedisBPMNCache(true); 
+		return cache; 
 	}
  }

@@ -27,6 +27,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import com.apptium.eventstore.EventstoreApplication;
+import com.apptium.eventstore.actors.OffsetStorage;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -326,7 +327,8 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+			logger.debug(executionRequestBody);
 			if(e.getMessage().contains("404")){
 				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
@@ -366,6 +368,43 @@ public class CommonMethods {
 	        producer.close();
 		} catch (Exception e) {
 			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+		}
+		
+	}
+	
+	/**
+	 * 
+	 * @param inputMessage
+	 * @param retryId
+	 */
+	public static void sendToEventQueueRetry(String inputMessage,Integer retryId) {
+		Map<String, Object> props = new HashMap<>();
+		
+		if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+			logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
+			return; 
+		}
+		
+		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+		}else {
+			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+		}
+		props.put(ProducerConfig.RETRIES_CONFIG, 0);
+		props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+		props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+		props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+		props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+		
+		String topic = String.format("%sRetry%d", EventstoreApplication.PLATFORM_KAFKA_TOPIC,retryId);
+		try {
+			Producer<String, String> producer = new KafkaProducer<>(props);
+			
+			producer.send(new ProducerRecord<String, String>(topic,inputMessage));
+	        producer.close();
+		} catch (Exception e) {
+			logger.error("Exception on writing to "+topic +" "+e.getMessage());
 		}
 		
 	}
@@ -488,4 +527,37 @@ public static void StreamExceptionHandler(String s,long offset,String errorMessa
 		}
 		
 	}
+
+public static void reSyncRetry(Integer retryId) {
+	final OffsetStorage db = new OffsetStorage();
+	String key; 
+	if(retryId == -1 ) {
+		key = String.format("%s.%s", EventstoreApplication.PLATFORM_KAFKA_TOPIC,EventstoreApplication.PLATFORM_KAFKA_GROUP);
+	}else {
+		key = String.format("%sRetry%d.%s", EventstoreApplication.PLATFORM_KAFKA_TOPIC,retryId,EventstoreApplication.PLATFORM_KAFKA_GROUP);
+	}
+	if(EventstoreApplication.getCacheBPMN().exist(key)) {
+		Map<String, String> offSetMsg = EventstoreApplication.getCacheBPMN().getAll(key, 80); 
+		offSetMsg.forEach((x,y)->{
+			String Id = x; 
+			JsonParser jsonParser = new JsonParser();
+			JsonElement dmnTree = jsonParser.parse(y); 
+			JsonObject tb = dmnTree.getAsJsonObject();
+			db.updateExternalOffSet(tb.get("groupname").getAsString(),
+					tb.get("topicname").getAsString(), 
+					tb.get("partitionid").getAsInt(),
+					tb.get("offset").getAsLong(), 
+					Id);
+			
+			
+		});
+	}
 }
+
+
+
+
+}
+
+
+
