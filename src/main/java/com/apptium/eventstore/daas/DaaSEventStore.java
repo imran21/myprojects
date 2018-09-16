@@ -38,7 +38,7 @@ public class DaaSEventStore {
  * @param accountName
  */
 		@SuppressWarnings("unchecked")
-		public void process(String inputMessage,String accountName,String appName){
+		public Boolean process(String inputMessage,String accountName,String appName){
 			String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
 			String DAASURL = EventstoreApplication.prop.getProperty("DAASURL"); 
 			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
@@ -58,7 +58,7 @@ public class DaaSEventStore {
 				if(tableBody.has("tableBody")) {
 					Gson gson = new Gson(); 
 					HashMap<String,Object> map = new HashMap<String,Object>();
-					Map<String,Object> pPushMsg = null; 
+					//Map<String,Object> pPushMsg = null; 
 				
 					Set<Entry<String, JsonElement>> test  = tableBody.getAsJsonObject().entrySet(); 
 						
@@ -137,8 +137,23 @@ public class DaaSEventStore {
 				message.getAsJsonObject().addProperty("accountName", accountName);
 				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
+				Integer counter = 1; 
+				Long retryDuration = EventstoreApplication.RETRY_BASE_DURATION; 
+				if(message.getAsJsonObject().has("retry")) {
+					counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					retryDuration = message.getAsJsonObject().get("retryDuration").getAsLong();
+					counter++;
+					retryDuration = retryDuration *2; 
+				}			
+				message.getAsJsonObject().addProperty("retry", counter);
+				message.getAsJsonObject().addProperty("retryDuration", retryDuration);
 				String eventMessage = message.getAsJsonObject().toString(); 
-				CommonMethods.sendToEventQueue(eventMessage);
+				if(counter > EventstoreApplication.RETRYLIMIT) {
+					CommonMethods.sendToEventQueueFallOut(message.toString());
+					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()));
+					
+				}else 
+				   CommonMethods.sendToEventQueueRetry(eventMessage,counter);
 		 }catch(Exception ex) {
 				JsonParser jsonParser = new JsonParser();
 				JsonElement message = jsonParser.parse(inputMessage); 
@@ -146,18 +161,25 @@ public class DaaSEventStore {
 				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
 				message.getAsJsonObject().addProperty("exception", ex.getLocalizedMessage()); 
+				Integer counter = 1; 
+				Long retryDuration = EventstoreApplication.RETRY_BASE_DURATION; 
 				if(message.getAsJsonObject().has("retry")) {
-					Integer counter = message.getAsJsonObject().get("retry").getAsInt(); 
-					counter++; 
-					message.getAsJsonObject().addProperty("retry", counter);
-				}else {
-					message.getAsJsonObject().addProperty("retry", 1);
-				}
+					counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					retryDuration = message.getAsJsonObject().get("retryDuration").getAsLong();
+					counter++;
+					retryDuration = retryDuration *2; 
+				}			
+				message.getAsJsonObject().addProperty("retry", counter);
+				message.getAsJsonObject().addProperty("retryDuration", retryDuration);
 				String eventMessage = message.getAsJsonObject().toString(); 
-				CommonMethods.sendToEventQueue(eventMessage);
-				
+				if(counter > EventstoreApplication.RETRYLIMIT) {
+					CommonMethods.sendToEventQueueFallOut(message.toString());
+					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()));
+					
+				}else 
+				   CommonMethods.sendToEventQueueRetry(eventMessage,counter);
 		 }
-			
+	 	  return true; 
 		}
 
 		/**
@@ -167,9 +189,10 @@ public class DaaSEventStore {
 		 * @param appName
 		 * @param eventId
 		 */
-		public void process2(String inputMessage,String accountName,String appName,String eventId){
+		public boolean process2(String inputMessage,String accountName,String appName,String eventId){
 
 			Timestamp currentUTC = CommonMethods.getCurrentDate();
+			
 			
 	try {		
 			if(!CommonMethods.isNotificationMSAvailable()) throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
@@ -202,8 +225,24 @@ public class DaaSEventStore {
 				message.getAsJsonObject().addProperty("accountName", accountName);
 				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
+				message.getAsJsonObject().addProperty("exception", e.getLocalizedMessage()); 
+				Integer counter = 1; 
+				Long retryDuration = EventstoreApplication.RETRY_BASE_DURATION; 
+				if(message.getAsJsonObject().has("retry")) {
+					counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					retryDuration = message.getAsJsonObject().get("retryDuration").getAsLong();
+					counter++;
+					retryDuration = retryDuration *2; 
+				}			
+				message.getAsJsonObject().addProperty("retry", counter);
+				message.getAsJsonObject().addProperty("retryDuration", retryDuration);
 				String eventMessage = message.getAsJsonObject().toString(); 
-				CommonMethods.sendToEventQueue(eventMessage);
+				if(counter > EventstoreApplication.RETRYLIMIT) {
+					CommonMethods.sendToEventQueueFallOut(message.toString());
+					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()));
+					
+				}else 
+				   CommonMethods.sendToEventQueueRetry(eventMessage,counter);
 		 }catch(Exception ex) {
 				JsonParser jsonParser = new JsonParser();
 				JsonElement message = jsonParser.parse(inputMessage); 
@@ -211,18 +250,26 @@ public class DaaSEventStore {
 				message.getAsJsonObject().addProperty("appName", appName);
 				message.getAsJsonObject().addProperty("action", "process"); 
 				message.getAsJsonObject().addProperty("exception", ex.getLocalizedMessage()); 
+				Integer counter = 1; 
+				Long retryDuration = EventstoreApplication.RETRY_BASE_DURATION; 
 				if(message.getAsJsonObject().has("retry")) {
-					Integer counter = message.getAsJsonObject().get("retry").getAsInt(); 
-					counter++; 
-					message.getAsJsonObject().addProperty("retry", counter);
-				}else {
-					message.getAsJsonObject().addProperty("retry", 1);
-				}
+					counter = message.getAsJsonObject().get("retry").getAsInt(); 
+					retryDuration = message.getAsJsonObject().get("retryDuration").getAsLong();
+					counter++;
+					retryDuration = retryDuration *2; 
+				}			
+				message.getAsJsonObject().addProperty("retry", counter);
+				message.getAsJsonObject().addProperty("retryDuration", retryDuration);
 				String eventMessage = message.getAsJsonObject().toString(); 
-				CommonMethods.sendToEventQueue(eventMessage);
+				if(counter > EventstoreApplication.RETRYLIMIT) {
+					CommonMethods.sendToEventQueueFallOut(message.toString());
+					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()));
+					
+				}else 
+				   CommonMethods.sendToEventQueueRetry(eventMessage,counter);
 				
 		 }
-			
+			return true; 
 		}
 		
 		
