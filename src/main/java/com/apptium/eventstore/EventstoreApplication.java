@@ -20,10 +20,10 @@ import com.google.common.cache.CacheBuilder;
 import akka.actor.ActorSystem;
 import akka.kafka.javadsl.Consumer;
 import scala.concurrent.duration.Duration;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-
-@EnableDiscoveryClient
+// import org.springframework.cloud.client.discovery.DiscoveryClient;
+// import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+//
+// @EnableDiscoveryClient
 @Configuration
 @SpringBootApplication
 @EnableAutoConfiguration
