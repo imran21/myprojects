@@ -1,26 +1,129 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<configuration>
+<!--
+
+    *******************************************************
+    Copyright (C) 2013 apptium <info@apptium.com>
+    *******************************************************
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+            http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<configuration scan="false" debug="false"> 
+	<!-- <configuration> -->
+	<property name="LOG_HOME" value="/Users/taftwallaceiii/logs/eventstore" /> 
+	<!-- definition of appender STDOUT -->
+	<springProperty scope="context" name="spring.application.name" source="spring.application.name"
+					defaultValue="eportal-engine"/>  
+ 
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<layout class="ch.qos.logback.classic.PatternLayout">
-			<Pattern>
-				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
-			</Pattern>
-		</layout>
+		<encoder>
+ 			<pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %-5level [%thread] %logger - %M - %L - %msg %n</pattern>
+		</encoder>
 	</appender>
 
-	<logger name="com.apptium.eventstore" level="DEBUG"
+	<!-- <appender name="ELASTIC" class="com.internetitem.logback.elasticsearch.ElasticsearchAppender">
+		<url>http://${ELASTIC_IP:-localhost}:${ELASTIC_REST_PORT:-9200}/_bulk</url>
+		<index>application-log</index>
+		<type>${spring.application.name}</type>
+		<loggerName>es-logger</loggerName> optional
+		<errorLoggerName>es-error-logger</errorLoggerName> optional
+		<connectTimeout>30000</connectTimeout> optional (in ms, default 30000)
+		<errorsToStderr>false</errorsToStderr> optional (default false)
+		<includeCallerData>false</includeCallerData> optional (default false)
+		<logsToStderr>false</logsToStderr> optional (default false)
+		<maxQueueSize>104857600</maxQueueSize> optional (default 104857600)
+		<maxRetries>3</maxRetries> optional (default 3)
+		<readTimeout>30000</readTimeout> optional (in ms, default 30000)
+		<sleepTime>250</sleepTime> optional (in ms, default 250)
+		<rawJsonMessage>false</rawJsonMessage> optional (default false)
+		<includeMdc>false</includeMdc> optional (default false)
+		<maxMessageSize>100</maxMessageSize> optional (default -1
+		<authentication class="com.internetitem.logback.elasticsearch.config.BasicAuthentication"/> optional
+		<properties>
+			<property>
+				<name>host</name>
+				<value>${ELASTIC_IP:-localhost}</value>
+				<allowEmpty>false</allowEmpty>
+			</property>
+			<property>
+				<name>severity</name>
+				<value>%level</value>
+			</property>
+			<property>
+				<name>thread</name>
+				<value>%thread</value>
+			</property>
+			<property>
+				<name>stacktrace</name>
+				<value>%ex</value>
+			</property>
+			<property>
+				<name>logger</name>
+				<value>%logger</value>
+			</property>
+		</properties>
+		<headers>
+			<header>
+				<name>Content-Type</name>
+				<value>text/plain</value>
+			</header>
+		</headers>
+	</appender>
+ -->
+
+	<!-- definition of appender ROLLING to a file -->
+	 <appender name="FILE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${LOG_HOME}/processengine.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss:SSS} %-5level [%thread] %logger{36} - %M : %msg%n
+			</Pattern>
+		</encoder>
+		
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			rollover daily
+			<fileNamePattern>${LOG_HOME}/processengine.%d{yyyy-MM-dd}.%i.log </fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				   class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>5MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy> 
+	</appender>
+	
+	<logger name="org.eclipse.jetty" level="${ROOTLOGGERLEVEL:-DEBUG}"
 		additivity="false">
-		<appender-ref ref="STDOUT" />
+		<!-- <appender-ref ref="STDOUT" /> -->
 	</logger>
 	
-	<logger name="kafka" level="ERROR">
-    	<appender-ref ref="STDOUT" />
-	</logger>
-
-	<root level="INFO">
+	<logger name="com.apptium" level="${ROOTLOGGERLEVEL:-DEBUG}"
+		additivity="false">
 		<appender-ref ref="STDOUT" />
+		<appender-ref ref="${APPLICATION_LOG_STORE:-FILE}" />
+
+	</logger>
+	
+	<logger name="es-logger" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+		<appender name="ES_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+			<encoder>
+				<pattern>%msg
+				</pattern> <!-- This pattern is important, otherwise it won't be the raw Elasticsearch format anyomre -->
+			</encoder>
+		</appender>
+	</logger>
+	
+	<root level="${ROOTLOGGERLEVEL:-ERROR}">
+		<appender-ref ref="STDOUT" />
+		<appender-ref ref="${APPLICATION_LOG_STORE:-FILE}" />
 	</root>
-
-
 </configuration>

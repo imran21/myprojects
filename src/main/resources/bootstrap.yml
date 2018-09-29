@@ -13,3 +13,18 @@ spring:
       enabled: false
       amqp:
         enabled: false
+#actuactor
+management:
+  port: ${management.port}
+  context-path: /eportal/dm/monitor
+  security:
+    enabled: false 
+
+endpoints:
+  health.sensitive: false
+  shutdown:
+    enabled: true
+    sensitive: false
+  restart:
+    enabled: false
+        
