@@ -19,7 +19,7 @@
 -->
 <configuration scan="false" debug="false"> 
 	<!-- <configuration> -->
-	<property name="LOG_HOME" value="/Users/taftwallaceiii/logs/eventstore" /> 
+<!-- 	<property name="LOG_HOME" value="/Users/taftwallaceiii/logs/eventstore" />  -->
 	<!-- definition of appender STDOUT -->
 	<springProperty scope="context" name="spring.application.name" source="spring.application.name"
 					defaultValue="eportal-engine"/>  
