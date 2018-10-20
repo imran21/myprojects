@@ -1,6 +1,7 @@
 package com.apptium.eventstore.services;
 
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -209,13 +210,38 @@ public class EventStoreServices {
 			message.getAsJsonObject().addProperty("appName", appName);
 			message.getAsJsonObject().addProperty("action", "process"); 
 			String eventMessage = message.getAsJsonObject().toString(); 
-			CommonMethods.sendToEventQueue(eventMessage);
-			  output.complete("success");
-		}catch (Exception e) {
+			
+			String DMNURL = EventstoreApplication.prop.getProperty("DMNURL"); 
+			String dmnKey = String.format("%s_DMN", accountName.toUpperCase()); 
+			String DMNSymptomsURL = String.format("%sname/%s/symptoms", DMNURL,dmnKey); 
+			
+					
+			if(!CommonMethods.isNotificationMSAvailable()) throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
+			
+			Object dmnTable = CommonMethods.invokePostExecution2(DMNSymptomsURL, inputMessage, null); 
+			if(dmnTable != null) {
+				CommonMethods.sendToEventQueue(eventMessage);
+				output.complete("success");
+			}else {
+				LOG.debug("--- DISREGARDING NO Event Rules "+ eventMessage);
+				output.complete("disregarded");
+			}
+		}catch (RuntimeException e) {
+			
+			JsonParser jsonParser = new JsonParser();
+			JsonElement message = jsonParser.parse(inputMessage); 
+			message.getAsJsonObject().addProperty("accountName", accountName);
+			message.getAsJsonObject().addProperty("appName", appName);
+			message.getAsJsonObject().addProperty("action", "process"); 
+			String eventMessage = message.getAsJsonObject().toString(); 
+			CommonMethods.sendToEventQueueRetry(eventMessage, 1);
+		}
+		catch (Exception e) {
+			  LOG.error(e.getLocalizedMessage());
 			  output.completeExceptionally(e);
 		}
-			
-		return output; 
+		return output;
+		
 	}
 	/**
 	 * 

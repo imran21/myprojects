@@ -128,6 +128,8 @@ public class DaaSEventStore {
 						
 					}
 			
+			}else {
+				LOG.debug("--- DISREGARDING NO Event Rules "+ inputMessage);
 			}
 			
 			
