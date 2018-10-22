@@ -23,8 +23,8 @@ public abstract class ConsumerBase {
 			  return Supervision.restart();  
 		  }
 		  else {
-			  System.out.println(" >>>>>> stoping"); 
-		    return Supervision.stop();
+			  System.out.println(" >>>>>> resuming"); 
+		    return Supervision.resume(); 
 		  }
 		};
 

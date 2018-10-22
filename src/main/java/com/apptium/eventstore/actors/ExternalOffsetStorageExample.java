@@ -87,7 +87,7 @@ final Config config = system.settings().config().getConfig("akka.kafka.consumer"
 //		     )
 //	  ).runWith(Sink.ignore(), materializer); 
 	    /**
-	     *   new design with the restart feature  - TW 
+	     *   new design with the restart feature and shut down with drain control  - TW 
 	     */
 	    
 	    final Executor ec = Executors.newCachedThreadPool();

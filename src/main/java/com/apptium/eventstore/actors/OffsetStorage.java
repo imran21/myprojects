@@ -27,7 +27,7 @@ public class OffsetStorage {
 	Logger LOG = LoggerFactory.getLogger(OffsetStorage.class);
 	
 	 // #plainSource
-    private final AtomicLong offsetStore = new AtomicLong();
+	public final AtomicLong offsetStore = new AtomicLong();
     private final String groupName = EventstoreApplication.PLATFORM_KAFKA_GROUP; 
     private final String topic = EventstoreApplication.PLATFORM_KAFKA_TOPIC; 
     private final int partition = EventstoreApplication.PLATFORM_KAFKA_PARTITION; 

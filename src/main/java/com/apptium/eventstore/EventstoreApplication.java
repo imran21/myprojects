@@ -117,7 +117,7 @@ public class EventstoreApplication {
 					@Override
 					public void run() {
 						System.gc();
-						//LOG.info("Running GC");
+						LOG.debug("Running GC");
 					}
 
 				},system.dispatcher());

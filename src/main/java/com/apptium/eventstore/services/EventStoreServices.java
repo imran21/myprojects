@@ -36,7 +36,10 @@ public class EventStoreServices {
 
 	Logger LOG = LoggerFactory.getLogger(EventStoreServices.class);
 	
-	
+	/**
+	 * 
+	 * @return
+	 */
 	@RequestMapping(produces="text/plain", method=RequestMethod.GET)
 	public String getIt() {
 		return "Got it!";
