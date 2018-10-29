@@ -1,4 +1,4 @@
-package com.apptium.eventstore;
+package com.apptium;
 
 import java.util.concurrent.TimeUnit;
 
@@ -11,9 +11,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
-import com.apptium.eventstore.actors.ExternalOffsetStorageExample;
-import com.apptium.eventstore.util.CommonMethods;
-import com.apptium.eventstore.util.RedisBPMNCache;
+import com.apptium.actor.ExternalOffsetStorageExample;
+import com.apptium.util.CommonMethods;
+import com.apptium.util.RedisBPMNCache;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 

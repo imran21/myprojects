@@ -1,4 +1,4 @@
-package com.apptium.eventstore.actors;
+package com.apptium.actor;
 
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.CompletionStage;
@@ -10,9 +10,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.daas.DaaSEventStore;
-import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.EventstoreApplication;
+import com.apptium.daas.DaaSEventStore;
+import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
 import com.typesafe.config.Config;
 
@@ -118,7 +118,7 @@ final Config config = system.settings().config().getConfig("akka.kafka.consumer"
 	  ).runWith(Sink.ignore(), materializer);   
 	    
 	    }catch(Exception ex) {
-	    	log.error(ex.getLocalizedMessage());
+	    	log.error(ex.getLocalizedMessage(), ex);
 	    	ex.printStackTrace();
 	    }
 	   
@@ -161,7 +161,7 @@ final Config config = system.settings().config().getConfig("akka.kafka.consumer"
 			        ).runWith(Sink.ignore(), materializer);   
 		    
 		    }catch(Exception ex) {
-		    	log.error(ex.getLocalizedMessage());
+		    	log.error(ex.getLocalizedMessage(), ex);
 		    	 ex.printStackTrace();
 		    }
 		    /**

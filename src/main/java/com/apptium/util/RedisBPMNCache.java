@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 import argo.jdom.JdomParser;
 import argo.jdom.JsonNode;
@@ -77,7 +77,7 @@ public class RedisBPMNCache {
 			CF_REDIS_SENTINELS = ConfigurationProperties.getConfigValue("CF_REDIS_SENTINELS") != null 
 								? ConfigurationProperties.getConfigValue("CF_REDIS_SENTINELS") : null; 				
 		}catch(Exception e) {
-			LOG.error(e.getLocalizedMessage());
+			LOG.error(e.getLocalizedMessage(), e);
 		}
 		
 		if ( useRedis ) {
@@ -148,9 +148,9 @@ public class RedisBPMNCache {
 			    }
 			} catch (InvalidSyntaxException ex) {
 			    // vcap_services could not be parsed.
-				LOG.error("Exception on RedisBPMNCache "+ex.getLocalizedMessage());
+				LOG.error("Exception on RedisBPMNCache "+ex.getLocalizedMessage(), ex);
 			} catch (Exception e) {
-				LOG.error("Exception on RedisBPMNCache "+e.getLocalizedMessage());
+				LOG.error("Exception on RedisBPMNCache "+e.getLocalizedMessage(), e);
 			}
 		} else {
 			

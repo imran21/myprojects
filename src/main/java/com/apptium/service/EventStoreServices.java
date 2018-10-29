@@ -1,4 +1,4 @@
-package com.apptium.eventstore.services;
+package com.apptium.service;
 
 import java.lang.reflect.Type;
 import java.sql.Timestamp;
@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.daas.DaaSEventStore;
-import com.apptium.eventstore.models.EventStoreEntry;
-import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.EventstoreApplication;
+import com.apptium.daas.DaaSEventStore;
+import com.apptium.model.EventStoreEntry;
+import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -240,7 +240,7 @@ public class EventStoreServices {
 			CommonMethods.sendToEventQueueRetry(eventMessage, 1);
 		}
 		catch (Exception e) {
-			  LOG.error(e.getLocalizedMessage());
+			  LOG.error(e.getLocalizedMessage(), e);
 			  output.completeExceptionally(e);
 		}
 		return output;
@@ -287,8 +287,4 @@ public class EventStoreServices {
 			 
 		
 	}
-
-
-	
-	
 }

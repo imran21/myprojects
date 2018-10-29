@@ -1,4 +1,4 @@
-package com.apptium.eventstore.actors;
+package com.apptium.actor;
 
 import akka.actor.AbstractLoggingActor;
 

@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 import javax.xml.namespace.QName;
 

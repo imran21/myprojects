@@ -1,4 +1,4 @@
-package com.apptium.eventstore.actors;
+package com.apptium.actor;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -7,9 +7,9 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.daas.DaaSEventStore;
-import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.EventstoreApplication;
+import com.apptium.daas.DaaSEventStore;
+import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;

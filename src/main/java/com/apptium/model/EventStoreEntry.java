@@ -1,4 +1,4 @@
-package com.apptium.eventstore.models;
+package com.apptium.model;
 
 public class EventStoreEntry {
 

@@ -1,4 +1,4 @@
-package com.apptium.eventstore;
+package com.apptium;
 
 import java.util.Properties;
 
@@ -16,8 +16,8 @@ import org.springframework.ws.wsdl.wsdl11.DefaultWsdl11Definition;
 import org.springframework.xml.xsd.SimpleXsdSchema;
 import org.springframework.xml.xsd.XsdSchema;
 
-import com.apptium.eventstore.util.DetailSoapFaultDefinitionExceptionResolver;
-import com.apptium.eventstore.util.ServiceFaultException;
+import com.apptium.util.DetailSoapFaultDefinitionExceptionResolver;
+import com.apptium.util.ServiceFaultException;
 
 
 @EnableWs

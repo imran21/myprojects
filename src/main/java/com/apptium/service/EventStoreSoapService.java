@@ -1,4 +1,4 @@
-package com.apptium.eventstore.services;
+package com.apptium.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,9 +12,9 @@ import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
 import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 
-import com.apptium.eventstore.daas.DaaSEventStore;
-import com.apptium.eventstore.util.ServiceFault;
-import com.apptium.eventstore.util.ServiceFaultException;
+import com.apptium.daas.DaaSEventStore;
+import com.apptium.util.ServiceFault;
+import com.apptium.util.ServiceFaultException;
 
 import io.spring.guides.gs_producing_web_service.EventRequest;
 import io.spring.guides.gs_producing_web_service.EventResponse;
