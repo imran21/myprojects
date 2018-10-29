@@ -1,4 +1,4 @@
-package com.apptium.eventstore.actors;
+package com.apptium.actor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,9 +12,9 @@ import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.daas.DaaSEventStore;
-import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.EventstoreApplication;
+import com.apptium.daas.DaaSEventStore;
+import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -251,7 +251,7 @@ public class OffsetStorage {
 				}
 			}
 		} catch (Exception e) {
-			LOG.error(e.getLocalizedMessage());
+			LOG.error(e.getLocalizedMessage(), e);
 			throw new Exception(e.getLocalizedMessage());
 		} 
 		

@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 import java.io.IOException;
 import java.sql.Timestamp;
@@ -26,8 +26,8 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.actors.OffsetStorage;
+import com.apptium.EventstoreApplication;
+import com.apptium.actor.OffsetStorage;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -68,7 +68,7 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
+			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody, e);
 			if(e.getMessage().contains("404")){
 				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
 			}else if(e.getMessage().contains("500")) {
@@ -78,13 +78,13 @@ public class CommonMethods {
 			}
 				
 		} catch (JsonParseException e) {
-			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
+			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody, e);
 			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		} catch (JsonMappingException e) {
-			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
+			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody, e);
 			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		} catch (IOException e) {
-			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody);
+			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " requestBody: "+executionRequestBody, e);
 			throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
 		}
 		return executed;
@@ -119,16 +119,16 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonParseException e) {
-			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonMappingException e) {
-			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (IOException e) {
-			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		}
 		return executed;
@@ -158,7 +158,7 @@ public class CommonMethods {
 			if(e.getMessage().contains("404")){
 				logger.info(String.format("Resource at %s does not exist",executionURL));
 			}else{
-				logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+				logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
 			}
 			if(e.getMessage().contains("404")){
 				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
@@ -169,7 +169,7 @@ public class CommonMethods {
 			}
 			
 		} catch (Exception e) {
-			logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+			logger.error("Exception invokeGetExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
 			throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage()));
 		}
 		return myObject;
@@ -209,16 +209,16 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("RestClientException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonParseException e) {
-			logger.error("JsonParseException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonParseException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonMappingException e) {
-			logger.error("JsonMappingException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonMappingException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (IOException e) {
-			logger.error("IOException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("IOException invokePatchExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		}
 		return myObject;
@@ -247,16 +247,16 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("RestClientException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonParseException e) {
-			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonParseException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (JsonMappingException e) {
-			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("JsonMappingException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		} catch (IOException e) {
-			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage());
+			logger.error("IOException invokeExecution >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionRequestBody + " cause:"+e.getMessage(), e);
 			//e.printStackTrace();
 		}
 		return myObject;
@@ -277,7 +277,7 @@ public class CommonMethods {
 		    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));		
 			return sqlDate;
 		}catch(Exception e){
-			logger.error("Error on getting date :"+ e.getMessage());
+			logger.error("Error on getting date :"+ e.getMessage(), e);
 			return sqlDate;
 		}
 	}
@@ -327,7 +327,7 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage());
+			logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
 			logger.debug(executionRequestBody);
 			if(e.getMessage().contains("404")){
 				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
@@ -367,7 +367,7 @@ public class CommonMethods {
 			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PLATFORM_KAFKA_TOPIC,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
-			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+			logger.error("Exception on sendToProcessQueue "+e.getMessage(), e);
 		}
 		
 	}
@@ -404,7 +404,7 @@ public class CommonMethods {
 			producer.send(new ProducerRecord<String, String>(topic,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
-			logger.error("Exception on writing to "+topic +" "+e.getMessage());
+			logger.error("Exception on writing to "+topic +" "+e.getMessage(), e);
 		}
 		
 	}
@@ -436,7 +436,7 @@ public class CommonMethods {
 			producer.send(new ProducerRecord<String, String>(topic,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
-			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+			logger.error("Exception on sendToProcessQueue "+e.getMessage(), e);
 		}
 		
 	}
@@ -468,7 +468,7 @@ public class CommonMethods {
 			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PUSHQUEUE,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
-			logger.error("Exception on sendToProcessQueue "+e.getMessage());
+			logger.error("Exception on sendToProcessQueue "+e.getMessage(), e);
 		}
 		
 	}
@@ -488,7 +488,7 @@ public class CommonMethods {
 			if(dmn != null && polyglot != null) available = true; 
 			if(!available) Thread.sleep(500);
 		}catch(Exception ex) {
-			logger.error(ex.getLocalizedMessage());
+			logger.error(ex.getLocalizedMessage(), ex);
 		}
 		
 		return available; 
@@ -523,7 +523,7 @@ public static void StreamExceptionHandler(String s,long offset,String errorMessa
 			CommonMethods.sendToEventQueueFallOut(message.toString());
 		
 		}catch(Exception ex) {
-			logger.error(String.format("%s %s %d", ex.getLocalizedMessage(),s,offset));
+			logger.error(String.format("%s %s %d", ex.getLocalizedMessage(),s,offset), ex);
 		}
 		
 	}

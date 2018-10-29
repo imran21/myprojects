@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -15,9 +15,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.actors.AtLeastOnceWithBatchCommitExample;
-import com.apptium.eventstore.daas.DaaSEventStore;
+import com.apptium.EventstoreApplication;
+import com.apptium.actor.AtLeastOnceWithBatchCommitExample;
+import com.apptium.daas.DaaSEventStore;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -97,7 +97,7 @@ public class AsyncThread implements Runnable {
 					Thread.sleep(6000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
-				log.error("Transaction Consumer :"+e.getLocalizedMessage());
+				log.error("Transaction Consumer :"+e.getLocalizedMessage(), e);
 				break; 
 			}
 		   }
@@ -207,7 +207,7 @@ public class AsyncThread implements Runnable {
 								}
 								
 							} catch(Exception ex) {
-								log.error(ex.getMessage());
+								log.error(ex.getMessage(), ex);
 								//break; 
 								
 							}finally {

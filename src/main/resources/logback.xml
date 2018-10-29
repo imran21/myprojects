@@ -1,129 +1,153 @@
-<!--
-
-    *******************************************************
-    Copyright (C) 2013 apptium <info@apptium.com>
-    *******************************************************
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-            http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-
--->
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="false" debug="false"> 
-	<!-- <configuration> -->
-<!-- 	<property name="LOG_HOME" value="/Users/taftwallaceiii/logs/eventstore" />  -->
-	<!-- definition of appender STDOUT -->
-	<springProperty scope="context" name="spring.application.name" source="spring.application.name"
-					defaultValue="eportal-engine"/>  
- 
+    <!-- <configuration> -->
+    <!-- <property name="LOG_HOME" value="/logs" /> -->
+    <conversionRule conversionWord="expRoot"
+                    converterClass="com.apptium.eportalutility.exception.logger.conversion.EportalExceptionConverter" />
 
-	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
- 			<pattern>%d{yyyy-MM-dd HH:mm:ss:SSS} %-5level [%thread] %logger - %M - %L - %msg %n</pattern>
-		</encoder>
-	</appender>
+    <conversionRule conversionWord="uuid"
+                    converterClass="com.apptium.eportalutility.exception.logger.conversion.UUIDConverter" />
+    
+    <springProperty scope="context" name="spring.application.name" source="spring.application.name"
+                    defaultValue="eportal-eventstore"/>
+    <!-- definition of appender STDOUT -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
+                : %msg %n</pattern>
+        </encoder>
+    </appender>
+   
+    <appender name="FILE"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/eportal-eventstore.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
+                : %msg%n
+            </Pattern>
+        </encoder>
 
-	<!-- <appender name="ELASTIC" class="com.internetitem.logback.elasticsearch.ElasticsearchAppender">
-		<url>http://${ELASTIC_IP:-localhost}:${ELASTIC_REST_PORT:-9200}/_bulk</url>
-		<index>application-log</index>
-		<type>${spring.application.name}</type>
-		<loggerName>es-logger</loggerName> optional
-		<errorLoggerName>es-error-logger</errorLoggerName> optional
-		<connectTimeout>30000</connectTimeout> optional (in ms, default 30000)
-		<errorsToStderr>false</errorsToStderr> optional (default false)
-		<includeCallerData>false</includeCallerData> optional (default false)
-		<logsToStderr>false</logsToStderr> optional (default false)
-		<maxQueueSize>104857600</maxQueueSize> optional (default 104857600)
-		<maxRetries>3</maxRetries> optional (default 3)
-		<readTimeout>30000</readTimeout> optional (in ms, default 30000)
-		<sleepTime>250</sleepTime> optional (in ms, default 250)
-		<rawJsonMessage>false</rawJsonMessage> optional (default false)
-		<includeMdc>false</includeMdc> optional (default false)
-		<maxMessageSize>100</maxMessageSize> optional (default -1
-		<authentication class="com.internetitem.logback.elasticsearch.config.BasicAuthentication"/> optional
-		<properties>
-			<property>
-				<name>host</name>
-				<value>${ELASTIC_IP:-localhost}</value>
-				<allowEmpty>false</allowEmpty>
-			</property>
-			<property>
-				<name>severity</name>
-				<value>%level</value>
-			</property>
-			<property>
-				<name>thread</name>
-				<value>%thread</value>
-			</property>
-			<property>
-				<name>stacktrace</name>
-				<value>%ex</value>
-			</property>
-			<property>
-				<name>logger</name>
-				<value>%logger</value>
-			</property>
-		</properties>
-		<headers>
-			<header>
-				<name>Content-Type</name>
-				<value>text/plain</value>
-			</header>
-		</headers>
-	</appender>
- -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_HOME}/eportal-eventstore.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>5MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
 
-	<!-- definition of appender ROLLING to a file -->
-	 <appender name="FILE"
-		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${LOG_HOME}/processengine.log</file>
-		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-			<Pattern>
-				%d{yyyy-MM-dd HH:mm:ss:SSS} %-5level [%thread] %logger{36} - %M : %msg%n
-			</Pattern>
-		</encoder>
-		
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			rollover daily
-			<fileNamePattern>${LOG_HOME}/processengine.%d{yyyy-MM-dd}.%i.log </fileNamePattern>
-			<timeBasedFileNamingAndTriggeringPolicy
-				   class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-				<maxFileSize>5MB</maxFileSize>
-			</timeBasedFileNamingAndTriggeringPolicy>
-		</rollingPolicy> 
-	</appender>
-	
-	<logger name="org.eclipse.jetty" level="${ROOTLOGGERLEVEL:-DEBUG}"
-		additivity="false">
-		<!-- <appender-ref ref="STDOUT" /> -->
-	</logger>
-	
-	<logger name="com.apptium" level="${ROOTLOGGERLEVEL:-DEBUG}"
-		additivity="false">
-		<appender-ref ref="STDOUT" />
-		<appender-ref ref="${APPLICATION_LOG_STORE:-FILE}" />
+    <appender name="fileErrorCode"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/eportal-eventstore-code.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
+                :trackId=%X{trackId}|uuid=%X{uuid}|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%X{exceptionIssueCode} %expRoot %n
+            </Pattern>
+        </encoder>
 
-	</logger>
-	
-	<logger name="es-logger" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_HOME}/eportal-eventstore-code.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>5MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="fileErrorStack"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/eportal-eventstore-stack.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
+                :trackId=%X{trackId}|%X{uuid}|%msg %n
+            </Pattern>
+        </encoder>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${LOG_HOME}/eportal-eventstore-stack.%d{yyyy-MM-dd}.%i.log
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>5MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+        <destination>localhost:5000</destination>
+
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <mdc/> <!-- MDC variables on the Thread will be written as JSON fields-->
+                <context/> <!--Outputs entries from logback's context -->
+                <version/> <!-- Logstash json format version, the @version field in the output-->
+                <logLevel/>
+                <loggerName/>
+
+                <pattern>
+                    <pattern> <!-- we can add some custom fields to be sent with all the log 
+					entries.     -->
+                        {
+                        "uuid" : "%uuid",
+                        "expRoot" : "%expRoot", 
+                        "micro-service" : "eportal-eventstore"
+                        }
+                    </pattern>
+                </pattern>
+
+                <threadName/>
+                <message/>
+
+                <logstashMarkers/> <!-- Useful so we can add extra information for specific log lines as Markers-->
+                <arguments/> <!--or through StructuredArguments-->
+
+                <stackTrace/>
+            </providers>
+        </encoder>
+    </appender>
+    
+    <logger name="org.springframework" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="org.springframework.data" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+        <appender-ref ref="STDOUT"/>
+    </logger> 
+    
+    <logger name="es-logger" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
 		<appender name="ES_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 			<encoder>
 				<pattern>%msg
-				</pattern> <!-- This pattern is important, otherwise it won't be the raw Elasticsearch format anyomre -->
+				</pattern>  
 			</encoder>
 		</appender>
 	</logger>
-	
-	<root level="${ROOTLOGGERLEVEL:-ERROR}">
-		<appender-ref ref="STDOUT" />
-		<appender-ref ref="${APPLICATION_LOG_STORE:-FILE}" />
-	</root>
+
+
+    <property   name="LOG_ABSTRACT" value="${LOG_ABSTRACT}" /> 
+    <if condition='property("LOG_ABSTRACT").equals("true")'>
+        <then>
+            <root level="${ROOTLOGGERLEVEL:-ERROR}">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="${APPLICATION_LOG_STORE:-FILE}" />
+            </root>
+        </then>
+    </if>
+    <if condition='property("LOG_ABSTRACT").equals("false")'>
+        <then>
+            <root level="${ROOTLOGGERLEVEL:-ERROR}">
+                <appender-ref ref="STDOUT" />
+                <appender-ref ref="FILE" />
+            </root>
+        </then>
+    </if>
+
 </configuration>

@@ -1,4 +1,4 @@
-package com.apptium.eventstore.daas;
+package com.apptium.daas;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.apptium.eventstore.EventstoreApplication;
-import com.apptium.eventstore.models.EventStoreEntry;
-import com.apptium.eventstore.util.CommonMethods;
+import com.apptium.EventstoreApplication;
+import com.apptium.model.EventStoreEntry;
+import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -266,7 +266,7 @@ public class DaaSEventStore {
 				String eventMessage = message.getAsJsonObject().toString(); 
 				if(counter > EventstoreApplication.RETRYLIMIT) {
 					CommonMethods.sendToEventQueueFallOut(message.toString());
-					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()));
+					LOG.error(String.format("<<>> Send to EventQueueFallout Exception Retry limit reached >>>   retry = %d, value = %s ",counter, message.toString()), ex);
 					
 				}else 
 				   CommonMethods.sendToEventQueueRetry(eventMessage,counter);
@@ -299,7 +299,7 @@ public class DaaSEventStore {
 				 throw e;
 			 }catch(Exception ex) {
 				LOG.error(String.format("Event Store %s - %s Not Saved, Exception %s",
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()), ex);
 //				
 //				pLogMsg.put("action", "save"); 
 //				String inputMessage = gson.toJson(pLogMsg,pLogMsg.getClass());
@@ -331,7 +331,7 @@ public class DaaSEventStore {
 //				}
 			}catch(Exception ex) {
 				LOG.error(String.format("Event Store Push Notification Object ID %s -  Event ID %s not writtent to PushQueue, Exception %s",
-						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()));
+						pLogMsg.get("objectId").toString(), pLogMsg.get("eventId").toString(),ex.getLocalizedMessage()), ex);
 				
 				throw new RuntimeException("Required service or services unavailable - Check DMN and Polyglot status"); 
 			}
@@ -346,7 +346,7 @@ public class DaaSEventStore {
 			try {
 				result = CommonMethods.invokeGetExecution(URL,"{}", new RestTemplate());
 			}catch(Exception ex) {
-				LOG.error(ex.getLocalizedMessage());
+				LOG.error(ex.getLocalizedMessage(), ex);
 				return events;
 			}
 			
@@ -376,7 +376,7 @@ public class DaaSEventStore {
 						}
 						
 					} catch (Exception e) {
-							LOG.error(e.getMessage());
+							LOG.error(e.getMessage(), e);
 					}
 				}	
 			}

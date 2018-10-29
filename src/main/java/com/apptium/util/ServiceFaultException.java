@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 public class ServiceFaultException extends RuntimeException {
 

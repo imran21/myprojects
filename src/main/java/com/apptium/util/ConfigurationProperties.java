@@ -1,4 +1,4 @@
-package com.apptium.eventstore.util;
+package com.apptium.util;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.env.Environment;
 
-import com.apptium.eventstore.EventstoreApplication;
+import com.apptium.EventstoreApplication;
 
 public class ConfigurationProperties {
 	private static final Log logger = LogFactory.getLog(ConfigurationProperties.class);
