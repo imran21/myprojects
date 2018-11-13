@@ -76,13 +76,15 @@
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 					class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-				<maxFileSize>5MB</maxFileSize>
+				<maxFileSize>${MAX_FILESIZE}</maxFileSize>
 			</timeBasedFileNamingAndTriggeringPolicy>
+			<!-- keep n days' worth of history -->
+			<maxHistory>${MAX_HISTORY}</maxHistory>
 		</rollingPolicy>
 	</appender>
 
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>localhost:5000</destination>
+        <destination>${LOGSTASH_IP}:${LOGSTASH_PORT}</destination>
 
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
@@ -98,7 +100,7 @@
                         {
                         "uuid" : "%uuid",
                         "expRoot" : "%expRoot", 
-                        "micro-service" : "eportal-eventstore"
+                        "micro-service" : "${spring.application.name}"
                         }
                     </pattern>
                 </pattern>
