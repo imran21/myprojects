@@ -18,56 +18,14 @@
         </encoder>
     </appender>
    
-   <!--  <appender name="FILE"
-              class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/eportal-eventstore.log</file>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
-                : %msg%n
-            </Pattern>
-        </encoder>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            rollover daily
-            <fileNamePattern>${LOG_HOME}/eportal-eventstore.%d{yyyy-MM-dd}.%i.log
-            </fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>5MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-    </appender>
- -->
-   <!--  <appender name="fileErrorCode"
-              class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOG_HOME}/eportal-eventstore-code.log</file>
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <Pattern>
-                %d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
-                :trackId=%X{trackId}|uuid=%X{uuid}|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%X{exceptionIssueCode} %expRoot %n
-            </Pattern>
-        </encoder>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            rollover daily
-            <fileNamePattern>${LOG_HOME}/eportal-eventstore-code.%d{yyyy-MM-dd}.%i.log
-            </fileNamePattern>
-            <timeBasedFileNamingAndTriggeringPolicy
-                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>5MB</maxFileSize>
-            </timeBasedFileNamingAndTriggeringPolicy>
-        </rollingPolicy>
-    </appender>
- -->
-    <appender name="FILE"
+   <appender name="FILE"
 			  class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${LOG_HOME}/${LOG_FILE_NAME}.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
-			%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
-				:trackId=%X{trackId}|uuid=%uuid|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%expRoot|
-				:exception=%ex %n
+			%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L :trackId=%X{trackId}|uuid=%uuid|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%expRoot|
+				:errorMessage=%msg
+                :exception=%ex %n
 			</Pattern>
 		</encoder>
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
