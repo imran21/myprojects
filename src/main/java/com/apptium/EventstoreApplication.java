@@ -104,6 +104,7 @@ public class EventstoreApplication {
 				ExternalOffsetStorageExample.startRetryConsumer(3);
 			}
 			gcRunner();
+     		LOG.error("********* Application Started Successfully *********");
 		}
 
 
