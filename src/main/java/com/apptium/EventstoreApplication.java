@@ -54,6 +54,8 @@ public class EventstoreApplication {
 	public static final int cacheTTL = 300;
 	//public static Set<String> set; //= ConcurrentHashMap.newKeySet();
 
+	public static String PLATFORM_KAFKA_CDCTOPIC = null;
+
 	public static Consumer.Control control;
 
 	public static void main(String[] args) {
@@ -66,6 +68,8 @@ public class EventstoreApplication {
 			PLATFORM_KAFKA_PORT = prop.getProperty("PLATFORM_KAFKA_PORT") != null ? prop.getProperty("PLATFORM_KAFKA_PORT") : null;
 
 			PLATFORM_KAFKA_TOPIC = prop.getProperty("PLATFORM_KAFKA_TOPIC") != null ? prop.getProperty("PLATFORM_KAFKA_TOPIC") : "EventQueue";
+			
+			PLATFORM_KAFKA_CDCTOPIC = prop.getProperty("PLATFORM_KAFKA_CDCTOPIC") != null ? prop.getProperty("PLATFORM_KAFKA_CDCTOPIC") : "CDCQueue";
 
 			PUSHQUEUE = prop.getProperty("PUSHQUEUE") != null ? prop.getProperty("PUSHQUEUE") : "PushQueue";
 

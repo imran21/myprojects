@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import com.apptium.EventstoreApplication;
+import com.apptium.actor.CDCProducer;
 import com.apptium.model.EventStoreEntry;
 import com.apptium.util.CommonMethods;
 import com.google.gson.Gson;
@@ -24,6 +25,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import akka.actor.ActorRef;
+import akka.actor.Props;
 
 @Component
 public class DaaSEventStore {
@@ -220,6 +224,7 @@ public class DaaSEventStore {
 					}
 					save(pLogMsg); 
 					writePushNotification(pLogMsg); 
+					
 				
 			
 		 }catch(RuntimeException e) {
@@ -321,6 +326,13 @@ public class DaaSEventStore {
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
 				CommonMethods.sendToPushQueue(tlog);
+				/**
+				 * write the message to the CDC Producer Actor
+				 * 
+				 */
+				ActorRef cdcProducer = EventstoreApplication.system.actorOf(Props.create(CDCProducer.class)); 
+				cdcProducer.tell(tlog, ActorRef.noSender());
+				cdcProducer = null; 
 				
 //				if(CommonMethods.invokeExecution(URL,tlog,new RestTemplate())){
 //					LOG.debug(String.format("Event Store Push Notification for  Object ID %s -  Event ID %s successfully created", 
