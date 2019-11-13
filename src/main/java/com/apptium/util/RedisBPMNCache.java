@@ -294,6 +294,24 @@ public class RedisBPMNCache {
 		return value;
 	}
 	
+	public String get(String key){
+		
+		Jedis jedis = null;
+		String value = null; 
+		if(poolObjectIsNull()) return null;
+		try {
+			jedis = getJedis(); 
+			if(jedis.exists(key)){
+				value = jedis.get(key); 
+			}
+		} finally {
+			  if (jedis != null) {
+			    jedis.close();
+			  }
+		}
+		return value;
+	}
+	
 	public String getDB(String key, String fieldName,int DBIndex){
 		
 		Jedis jedis = null;
