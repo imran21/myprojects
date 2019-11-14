@@ -592,6 +592,39 @@ public static void reSyncRetry(Integer retryId) {
 }
 
 
+public static void sendToCDCQueueFailOut(String inputMessage) {
+	Map<String, Object> props = new HashMap<>();
+	
+	if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+		logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
+		return; 
+	}
+	
+	if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
+		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+	}else {
+		props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+	}
+	props.put(ProducerConfig.RETRIES_CONFIG, 0);
+	props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
+	props.put(ProducerConfig.LINGER_MS_CONFIG, 1);
+	props.put(ProducerConfig.BUFFER_MEMORY_CONFIG, 33554432);
+	props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+	props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+	
+
+	try {
+		Producer<String, String> producer = new KafkaProducer<>(props);
+		String topic = String.format("%sFALLOUT", EventstoreApplication.PLATFORM_KAFKA_CDCTOPIC);
+		producer.send(new ProducerRecord<String, String>(topic,inputMessage));
+        producer.close();
+	} catch (Exception e) {
+		logger.error("Exception on sendToCDCQueueFailOut "+e.getMessage(), e);
+	}
+	
+}
+
+
 
 
 }

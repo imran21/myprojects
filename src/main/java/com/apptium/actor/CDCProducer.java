@@ -1,11 +1,18 @@
 package com.apptium.actor;
 
+import java.util.HashMap;
+import java.util.List;
+
+import org.thymeleaf.util.StringUtils;
+
 import com.apptium.EventstoreApplication;
 import com.apptium.util.CommonMethods;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.jayway.jsonpath.DocumentContext;
+import com.jayway.jsonpath.JsonPath;
 
 import akka.actor.AbstractActor;
 import akka.event.Logging;
@@ -47,11 +54,37 @@ public class CDCProducer extends AbstractActor{
 						transactionMessage.getAsJsonObject().addProperty("domainId", domainId);
 						transactionMessage.getAsJsonObject().addProperty("domainName", domainName);
 						transactionMessage.getAsJsonObject().addProperty("subDomainId", subDomainId); 
-						transactionMessage.getAsJsonObject().addProperty("subDoaminName", sudDomainName);
+						transactionMessage.getAsJsonObject().addProperty("subDomainName", sudDomainName);
 						transactionMessage.getAsJsonObject().addProperty("transactionDate", transactionDate);
-						log.debug(transactionMessage.toString());
 						
-						CommonMethods.sendToCDCQueue(transactionMessage.toString());
+						String objectkey = String.format("%s::%s::Object", accountName,applicationName); 
+						String objectJson = EventstoreApplication.getCacheBPMN().get(objectkey); 
+						
+						DocumentContext jsonContext = JsonPath.parse(objectJson); 
+						List<HashMap<String,Object>> j  = jsonContext.read(String.format("$..objects[?(@.model == '%s')]", domainName)); 
+						Boolean postToCDC = true; 
+						if(j.isEmpty()) {
+							log.error(String.format("Could not find OBJECT Model at %s for Domain/Model %s", objectkey,domainName));
+							String objectModel = StringUtils.substring(domainName, 0, domainName.length()-1); 
+							 j  = jsonContext.read(String.format("$..objects[?(@.model == '%s')]", objectModel));
+							 if(j.isEmpty()) {
+								 log.error(String.format("Second Attempt: Could not find OBJECT Model at %s for Domain/Model %s", objectkey,objectModel));
+								 postToCDC = false; 
+							 }
+							 transactionMessage.getAsJsonObject().addProperty("objectModel", objectModel);
+						}else {
+							transactionMessage.getAsJsonObject().addProperty("objectModel", domainName);
+						}
+						j.clear();
+						j = null; 
+						
+						
+						log.debug(transactionMessage.toString());
+						if(postToCDC) {
+							CommonMethods.sendToCDCQueue(transactionMessage.toString());
+						}else {
+							CommonMethods.sendToCDCQueueFailOut(transactionMessage.toString());
+						}
 					}
 				}).build(); 
 	}
