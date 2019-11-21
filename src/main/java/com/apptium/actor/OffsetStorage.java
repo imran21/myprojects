@@ -40,7 +40,7 @@ public class OffsetStorage {
     		DaaSEventStore daasObject = new DaaSEventStore(); 	
     	
     			String s = new String(record.value());
-    			LOG.info(String.format(">>>  key = %s,  offset= %d, partition = %s, value = %s ",record.key(),record.offset(),record.partition(),s));
+    			LOG.error(String.format(">>>  key = %s,  offset= %d, partition = %s, value = %s ",record.key(),record.offset(),record.partition(),s));
     			offsetStore.set(record.offset());
 				try {
 					JsonParser jsonParser = new JsonParser();

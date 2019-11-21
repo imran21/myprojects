@@ -125,7 +125,7 @@ public class EventStoreServices {
 //		 inputMessage.addProperty("action", "process"); 
 //		 documents.add(item);
 //		 inputMessage.add("document", documents);
-		 
+		LOG.error(String.format("API Create -> %s", eventMessage));
 		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage)); 
 	
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
@@ -156,6 +156,7 @@ public class EventStoreServices {
 			 
 		 final String appName =  map.get("appname").toString();  
 		 
+		LOG.error(String.format("API createEvent -> %s %s %s ", eventMessage,accountName,appName));
 		CompletableFuture.supplyAsync(() -> writeEventStoreEntry(eventMessage, accountName,appName)); 
 		
 		return new ResponseEntity<>(String.format("{\"%s\": \"%s\"}", "Sucessfully","Event Store Entity Created"),
