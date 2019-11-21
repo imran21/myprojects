@@ -119,7 +119,7 @@ public class DaaSEventStore {
 //												
 //													 if(pPushMsg != null && !pPushMsg.isEmpty())
 														writePushNotification(pLogMsg); 
-													 eventProcessed.add(eventId); 
+														eventProcessed.add(eventId); 
 												   }
 												}
 											
