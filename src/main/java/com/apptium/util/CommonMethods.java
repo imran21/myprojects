@@ -351,8 +351,11 @@ public class CommonMethods {
 		
 		if(EventstoreApplication.PLATFORM_KAFKA_CLUSTER == null || EventstoreApplication.PLATFORM_KAFKA_CLUSTER.isEmpty()) {
 			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_HOST+":"+EventstoreApplication.PLATFORM_KAFKA_PORT);
+			logger.error(String.format("sendToEventQueue Topic %s non cluster %s:%s", EventstoreApplication.PLATFORM_KAFKA_TOPIC,
+					EventstoreApplication.PLATFORM_KAFKA_HOST,EventstoreApplication.PLATFORM_KAFKA_PORT));
 		}else {
 			props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, EventstoreApplication.PLATFORM_KAFKA_CLUSTER);
+			logger.error(String.format("sendToEventQueue Topic %s Cluster %s", EventstoreApplication.PLATFORM_KAFKA_TOPIC,EventstoreApplication.PLATFORM_KAFKA_CLUSTER));
 		}
 		props.put(ProducerConfig.RETRIES_CONFIG, 0);
 		props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
@@ -364,6 +367,7 @@ public class CommonMethods {
 	
 		try {
 			Producer<String, String> producer = new KafkaProducer<>(props);
+			logger.error(String.format("sendToEventQueue %s", inputMessage ));		
 			producer.send(new ProducerRecord<String, String>(EventstoreApplication.PLATFORM_KAFKA_TOPIC,inputMessage));
 	        producer.close();
 		} catch (Exception e) {
