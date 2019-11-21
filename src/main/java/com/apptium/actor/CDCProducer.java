@@ -79,10 +79,12 @@ public class CDCProducer extends AbstractActor{
 						j = null; 
 						
 						
-						log.debug(transactionMessage.toString());
+						
 						if(postToCDC) {
+							log.error("Sending to CDC" +transactionMessage.toString());
 							CommonMethods.sendToCDCQueue(transactionMessage.toString());
 						}else {
+							log.error("Sending to CDC CDCQueueFailOut" +transactionMessage.toString());
 							CommonMethods.sendToCDCQueueFailOut(transactionMessage.toString());
 						}
 					}
