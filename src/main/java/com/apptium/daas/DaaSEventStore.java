@@ -325,11 +325,13 @@ public class DaaSEventStore {
 			Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'").create() ;
 			String tlog = gson.toJson(pLogMsg,pLogMsg.getClass());
 			try {
+				LOG.error("Writing to Push Queue");
 				CommonMethods.sendToPushQueue(tlog);
 				/**
 				 * write the message to the CDC Producer Actor
 				 * 
 				 */
+				LOG.error("Caling the CDC Producer");
 				ActorRef cdcProducer = EventstoreApplication.system.actorOf(Props.create(CDCProducer.class)); 
 				cdcProducer.tell(tlog, ActorRef.noSender());
 				cdcProducer = null; 

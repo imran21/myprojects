@@ -82,6 +82,18 @@
         <appender-ref ref="STDOUT"/>
     </logger> 
     
+    
+    <logger name="com.apptium.actor" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+        <appender-ref ref="STDOUT"/>
+         <appender-ref ref="FILE" />
+    </logger> 
+    
+      <logger name="ccom.apptium.daas" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
+        <appender-ref ref="STDOUT"/>
+         <appender-ref ref="FILE" />
+    </logger> 
+    
+    
     <logger name="es-logger" level="${ROOTLOGGERLEVEL:-ERROR}" additivity="false">
 		<appender name="ES_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
 			<encoder>

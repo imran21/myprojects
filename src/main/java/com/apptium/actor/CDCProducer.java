@@ -27,7 +27,7 @@ public class CDCProducer extends AbstractActor{
 		
 		return this.receiveBuilder()
 				.match(String.class, x-> {
-					
+					log.error(x.toString());
 					JsonParser jsonParser = new JsonParser();
 					JsonElement message = jsonParser.parse(x); 				
 					if(message.getAsJsonObject().has("eventId")) {
