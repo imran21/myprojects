@@ -13,7 +13,7 @@
     <!-- definition of appender STDOUT -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
+            <pattern>%d{yyyy-MM-dd HH:mm:ss,${ROOTLOGGER_TIME_ZONE:-GMT}} %-5level [%thread] %logger - %M - %L
                 : %msg %n</pattern>
         </encoder>
     </appender>
