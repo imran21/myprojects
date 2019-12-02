@@ -13,7 +13,7 @@
     <!-- definition of appender STDOUT -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss,${ROOTLOGGER_TIME_ZONE:-GMT}} %-5level [%thread] %logger - %M - %L
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L
                 : %msg %n</pattern>
         </encoder>
     </appender>
@@ -23,7 +23,7 @@
 		<file>${LOG_HOME}/${LOG_FILE_NAME}.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
-			%d{yyyy-MM-dd HH:mm:ss} %-5level [%thread] %logger - %M - %L :trackId=%X{trackId}|uuid=%uuid|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%expRoot|
+			%d{yyyy-MM-dd HH:mm:ss,${ROOTLOGGER_TIME_ZONE:-GMT}} %-5level [%thread] %logger - %M - %L :trackId=%X{trackId}|uuid=%uuid|accountName=%X{accountName}|appName=%X{appName}|userName=%X{userName}|exceptionIssueCode=%expRoot|
 				:errorMessage=%msg
                 :exception=%ex %n
 			</Pattern>
