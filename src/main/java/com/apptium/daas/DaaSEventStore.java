@@ -435,11 +435,11 @@ public class DaaSEventStore {
 			
 				JsonElement transactionMessage = jsonParser.parse( message.getAsJsonObject().get("eventdata").getAsString()); 
 				
-				if(transactionMessage.getAsJsonObject().has("accountName")) 
+				if(!transactionMessage.getAsJsonObject().has("accountName")) 
 					transactionMessage.getAsJsonObject().addProperty("accountName", accountName);
-				if(transactionMessage.getAsJsonObject().has("appname")) 
+				if(!transactionMessage.getAsJsonObject().has("appname")) 
 					transactionMessage.getAsJsonObject().addProperty("appname", applicationName);
-				if(transactionMessage.getAsJsonObject().has("eventId")) 
+				if(!transactionMessage.getAsJsonObject().has("eventId")) 
 					transactionMessage.getAsJsonObject().addProperty("eventId", eventId);
 				transactionMessage.getAsJsonObject().addProperty("eventName", eventName);
 				transactionMessage.getAsJsonObject().addProperty("domainId", domainId);

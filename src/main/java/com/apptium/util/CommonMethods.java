@@ -327,14 +327,16 @@ public class CommonMethods {
 				}
 			}
 		}catch(RestClientException e){
-			logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
-			logger.debug(executionRequestBody);
+		
 			if(e.getMessage().contains("404")){
-				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 404")); 
+				logger.debug("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
+				logger.debug(executionRequestBody);
 			}else if(e.getMessage().contains("500")) {
-				//throw new Exception(String.format("%s returned %s", executionURL,"HTTP 500")); 
+				logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
+				logger.debug(executionRequestBody);
 			}else {
-				//throw new Exception(String.format("%s returned %s", executionURL,e.getLocalizedMessage())); 
+				logger.error("RestClientException invokeExecution (DMN)  >>>>> "+String.valueOf(e.getMessage()) + " URL "+ executionURL + " cause:"+e.getMessage(), e);
+				logger.debug(executionRequestBody);
 			}
 		} 
 		return myObject;
