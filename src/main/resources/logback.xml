@@ -42,7 +42,7 @@
 	</appender>
 
     <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>${LOGSTASH_IP}:${LOGSTASH_PORT}</destination>
+       <destination>${LOGSTASH_IP:-localhost}:${LOGSTASH_PORT:-5000}</destination>
 
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
