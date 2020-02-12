@@ -6,7 +6,7 @@
 
 	<groupId>com.apptium</groupId>
 	<artifactId>eportal-eventstore</artifactId>
-	<version>1.0.0</version>
+	<version>COBIA-BETA</version>
 	<packaging>jar</packaging>
 
 	<name>eventstore</name>
