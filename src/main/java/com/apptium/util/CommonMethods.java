@@ -107,8 +107,10 @@ public class CommonMethods {
 			ResponseEntity<String> responseString = restTemplate.exchange(executionURL, HttpMethod.PUT,entity, String.class, map); 
 			if(responseString != null){
 				if(responseString.getStatusCode() == HttpStatus.OK){
-					myObject = new ObjectMapper().readValue(responseString.getBody(),Object.class);
-					logger.debug(myObject.toString());
+					if(responseString.getBody() != null)
+						myObject = new ObjectMapper().readValue(responseString.getBody(),Object.class);
+					else if(responseString.getBody() == null)
+						myObject = new ObjectMapper().readValue("{}",Object.class);
 					
 					executed = true;
 				}else if(responseString.getStatusCode() == HttpStatus.CREATED){
@@ -345,8 +347,9 @@ public class CommonMethods {
 	
 	public static void sendToEventQueue(String inputMessage) {
 		Map<String, Object> props = new HashMap<>();
+		boolean useWriteQueue = EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE;
 		
-		if(!EventstoreApplication.PLATFORM_USE_WRITE_EVENT_QUEUE) {
+		if(!useWriteQueue) {
 			logger.warn("PLATFORM_USE_WRITE_EVENT_QUEUE is set to false no event message were written to the event queue");
 			return; 
 		}
