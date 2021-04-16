@@ -418,7 +418,7 @@ public class DaaSEventStore {
 		}
 		
 		private void createCDCMessage(String x) throws Exception {
-			LOG.error(x.toString());
+			LOG.debug(x.toString());
 			JsonParser jsonParser = new JsonParser();
 			JsonElement message = jsonParser.parse(x); 				
 			if(message.getAsJsonObject().has("eventId")) {
